@@ -65,7 +65,7 @@ caseCollectConcel:
     #后置
     teardown:
       #后置直接执行的sql
-      delete_sql: delete from table where user_id=393014 and case_id=18996
+      delete_sql: delete from table where user_id=1 and case_id=1
       #从请求结果中获取参数拼接到sql执行
       is_params:
         $.data: delete from table where order_id=
