@@ -1,0 +1,8 @@
+Token:
+  method: "post"
+  url: "https://1.com/sso/login2"
+  header: { "Content-Type": "application/form-data" }
+  params: {
+    "telephone": "1",
+    "authCode": "1"
+  }
