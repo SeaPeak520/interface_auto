@@ -33,7 +33,7 @@ def set_token():
         response = requests.request(method=pre_data['method'], url=pre_data['url'],headers=pre_data['header'],params=pre_data['params'],verify=False)
         res = json.loads(response.text)
         token_dic['time'] = current_time
-        token_dic['token'] = "Bearer " + res['data']['token']['token']
+        token_dic['token'] = f"Bearer {res['data']['token']['token']}"
         JsonHandle(TOKEN_FILE).set_json_data(token_dic)
 
 

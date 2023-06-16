@@ -1,0 +1,72 @@
+# 公共参数
+case_common:
+  allureEpic: 测试平台
+  allureFeature: 抽奖活动
+  allureStory: 查询用户当前剩余抽奖次数接口
+
+caseCollectConcel:
+  #不同服务可能用host1和host2做标识，和config.yaml是映射关系
+  host: ${{host(1)}}
+  url: /mall-lawyer/concel
+  #请求方式
+  method: post
+  remark: 取消收藏案源信息接口
+  # 是否执行，空或者 true 都会执行
+  is_run:
+  #请求头
+  headers:
+    Content-Type: application/form-data
+    #请求带上token，从token.json获取
+    authorization: true
+    # 这里cookie的值，写的是存入缓存的名称
+    #cookie: $cache{login_cookie}
+  # 请求的数据，是 params 还是 json、或者file、data
+  requestType: params
+  #请求参数
+  requestData:
+    caseId: 18996
+  #数据库校验
+  sql_data: select * from table where user_id=1 and case_id=1;
+  sql_assert: 0
+  #结果断言
+  assert_data:
+    status_code: 200
+    code:
+      jsonpath: $.code
+      type: ==
+      value: 200
+      AssertType:
+      message: code不一致
+    message:
+      jsonpath: $.message
+      type: ==
+      value: 操作成功
+      AssertType:
+      message: message不一致
+  #前后置
+  process:
+    #前置
+    setup:
+      #前置直接执行的sql
+      delete_sql: delete from table where user_id=1 and case_id=1
+      #前置执行的请求
+      request:
+        host: ${{host(1)}}
+        url: /mall-lawyer/add
+        method: post
+        headers:
+          Content-Type: application/form-data
+        requestType: params
+        requestData:
+          caseId: 1
+      #查询sql，替换请求参数的值，key和请求参数的key保持一致
+      is_yield:
+        caseId: select case_id from table where user_id=1 and case_id=1;
+    #后置
+    teardown:
+      #后置直接执行的sql
+      delete_sql: delete from table where user_id=393014 and case_id=18996
+      #从请求结果中获取参数拼接到sql执行
+      is_params:
+        $.data: delete from table where order_id=
+
