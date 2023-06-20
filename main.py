@@ -20,13 +20,12 @@ if __name__ == "__main__":
         "-n=4",
         "--reruns=2",
         "--reruns-delay=3",
-        f"{ROOT_DIR}test_case/xiaofa/案源收藏/",
+        f"{ROOT_DIR}test_case/xiaofa/产品迭代接口/",
         f"--alluredir={ROOT_DIR}report/allure_results",
         "--clean-alluredir"
     ]
-    #args = ['-s', '-v', '-n=4', '--reruns=2', '--reruns-delay=3', project_path + '/test_case/', '--alluredir=' + project_path + '/report/allure_results', '--clean-alluredir']
     pytest.main(args)
     # #
     # # 生成allure报告
-    # cmd = f"allure generate {ROOT_DIR}report/allure_results -o {ROOT_DIR}report/allure_report -c {ROOT_DIR}report/allure_report"
-    # os.system(cmd)
+    cmd = f"allure generate {ROOT_DIR}report/allure_results -o {ROOT_DIR}report/allure_report -c {ROOT_DIR}report/allure_report"
+    os.system(cmd)

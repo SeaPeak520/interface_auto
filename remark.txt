@@ -1,0 +1,6 @@
+1、命令行pip install -r requirements.txt 批量安装依赖库
+2、修改common/config 的config.yaml的host配置和mysql配置等
+3、修改data/pre 的Token.yaml的请求参数，以获取正确的配置生成token（如不需要从接口获取，则更改token.json的token参数并注释 test_case目录的conftest.py的set_token方法（该方法间隔一天更新token））
+4、编写用例：根据testdata.xlsx的规范编写，如要执行的用例sheet名称不包含'test'字段
+5、更改main.py函数，执行用例的目录（第23行）
+6、执行main.py运行程序
