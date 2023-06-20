@@ -12,11 +12,11 @@ def write_case_process():
     """
     # 循环拿到所有存放用例的文件路径
     for i in get_all_caseyaml(TESTDATA_DIR):
-        #print(i)
-        # 循环读取文件中的数据
+        #获取yaml文件的用例数据
         case_process = CaseData(i).case_process(case_id_switch=True)
+        # 循环读取文件中的数据
         if case_process is not None:
-            # 转换数据类型
+            #循环遍历用例
             for case in case_process:
                 for k, v in case.items():
                     # 判断 case_id 是否已存在
@@ -24,7 +24,6 @@ def write_case_process():
                     # 如果case_id 不存在，则将用例写入缓存池中
                     if not case_id_exit:
                         CacheHandler.update_cache(cache_name=k, value=v)
-                        # case_data[k] = v
                     else:
                         raise ValueError(f"case_id: {k} 存在重复项, 请修改case_id\n"
                                          f"文件路径: {i}")
