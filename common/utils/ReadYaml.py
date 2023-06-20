@@ -75,6 +75,11 @@ class YamlHandler:
             return flag
 
     def DictWriteYaml(self,dict_data):
+        # 不添加则会写入null，作用：把None不写入值
+        def represent_none(self, _):
+            return self.represent_scalar('tag:yaml.org,2002:null', '')
+
+        yaml.add_representer(type(None), represent_none, Dumper=yaml.SafeDumper)
         """把dict数据全量写入到yaml文件中"""
         with open(self.file,'w+',encoding='utf-8') as f:
             yaml.safe_dump(dict_data,f, default_flow_style=False, sort_keys=False, encoding='utf-8', allow_unicode=True)

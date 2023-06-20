@@ -1,4 +1,4 @@
-import jsonpath
+from jsonpath import jsonpath
 import os
 import sys
 
@@ -11,7 +11,7 @@ def get_value(data: dict, key: str) -> list[str | int | float]:
     :param key: 表达式'$.code'：从根查找code键
     :return:
     """
-    return jsonpath.jsonpath(data, key)
+    return jsonpath(data, key)
 
 # 替换模板文件内容
 def alter_file_content(datafile: str, source_str: str, replace_str: str) -> None:

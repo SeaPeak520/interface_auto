@@ -147,11 +147,11 @@ class FromExcelWriteYaml():
                                             "assert_data": None,
                                             "process": {}
                                     }
-                            if sql_data := function_data_value['数据库校验语句']:
-                                info_case['sql_data'] = sql_data
-                            if function_data_value['数据库校验语句'] != '':
-                                info_case['sql_assert'] = function_data_value['数据库校验结果']                             
-                            
+                            #缺少不会入库
+                            if function_data_value['数据库校验语句'] and function_data_value['数据库校验结果'] != '':
+                                info_case['sql_data'] = function_data_value['数据库校验语句']
+                                info_case['sql_assert'] = function_data_value['数据库校验结果']
+
                             #2、校验数据
                             assert_data = {}
                             if status_code := function_data_value['校验状态码']:
