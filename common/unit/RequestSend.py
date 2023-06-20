@@ -141,9 +141,11 @@ class RequestSend:
             else:
                 sql_data = self.__yaml_case.sql_data
                 sql_assert = self.__yaml_case.sql_assert
-            # 判断不为空才执行校验
-            if sql_data and sql_assert:
+            # 判断不为空才执行校验   sql_data：可能为sql或None ；sql_assert：可能为0或1或None。 None不执行
+            if sql_data and sql_assert is not None:
                 return AssertExecution().assert_execution(sql_data, sql_assert)
+        else:
+            self.log.info(f"数据库校验已关闭，用例不进行数据库校验")
 
     def _check_params(
             self,

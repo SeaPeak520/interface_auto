@@ -147,7 +147,7 @@ class FromExcelWriteYaml():
                                             "assert_data": None,
                                             "process": {}
                                     }
-                            #缺少不会入库
+                            #缺少不会入库 != ''兼容0的值
                             if function_data_value['数据库校验语句'] and function_data_value['数据库校验结果'] != '':
                                 info_case['sql_data'] = function_data_value['数据库校验语句']
                                 info_case['sql_assert'] = function_data_value['数据库校验结果']
