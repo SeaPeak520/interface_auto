@@ -12,7 +12,7 @@ from common.log.LogHandler import LogHandler
 from common.db.MysqlHelper import SqlHandle
 
 class AssertUtil:
-    def __init__(self, assert_data, response_data, status_code, request_data=None):
+    def __init__(self, assert_data, response_data, status_code, remark, request_data=None):
         """
         :param assert_data:  yaml文件中assert的数据
         :param response_data: 请求接口返回的数据
@@ -22,6 +22,7 @@ class AssertUtil:
         self.response_data = response_data
         self.request_data = request_data
         self.status_code = status_code
+        self.remark = remark
         self.log = LogHandler(os.path.basename(__file__))
 
     # 获取assert_data的dict数据
@@ -145,7 +146,7 @@ class AssertUtil:
                 try:
                     self._assert('equals', self.status_code, self.get_status_code, '状态码不一致')
                 except AssertionError as e:
-                    self.log.error(f'状态码不一致[{self.status_code},{self.get_status_code}]')
+                    self.log.error(f'{self.remark} 状态码不一致[{self.status_code},{self.get_status_code}]')
                     raise e
 
             else:
@@ -165,14 +166,16 @@ class AssertUtil:
                         self._assert(self.get_type(_assert_data), self._assert_resp_data(_assert_data),
                                  self.get_value(_assert_data), self.get_message(_assert_data))
                     except AssertionError as e:
-                        self.log.error(f'校验错误，信息：[{self._assert_resp_data(_assert_data)},{self.get_value(_assert_data)}]{self.get_message(_assert_data)}')
+                        self.log.error(
+                            f'{self.remark} 校验错误，信息：[{self._assert_resp_data(_assert_data)},{self.get_value(_assert_data)}] {self.get_message(_assert_data)}')
                         raise e
                     except AssertTypeError as e:
-                        self.log.error(f"校验类型不正确: {self.get_assert_type(_assert_data)}")
+                        self.log.error(
+                            f"{self.remark} 校验类型不正确: {self.remark} {self.get_assert_type(_assert_data)}")
                         raise e
 
                 else:
-                    raise AssertTypeError("断言失败，目前只支持数据库断言和响应断言")
+                    raise AssertTypeError(f"{self.remark} 断言失败，目前只支持数据库断言和响应断言")
 
 
 class AssertExecution(SqlHandle):

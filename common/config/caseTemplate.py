@@ -21,7 +21,7 @@ class class_name:
     def function_name(self, in_data):
         res = RequestSend(in_data).http_request()
         AssertUtil(assert_data=in_data['assert_data'],
-               request_data=res.yaml_body,
-               response_data=res.res_data,
-               status_code=res.res_status_code).assert_type_handle()
-
+                   request_data=res.yaml_body,
+                   response_data=res.res_data,
+                   status_code=res.res_status_code,
+                   remark=res.yaml_remark).assert_type_handle()
