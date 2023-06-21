@@ -1,10 +1,13 @@
 import ast
-import yaml
 import os
 import sys
-from common.utils.DirHelper import ensure_path_sep
-from common.utils.regularHandle import regular
+
+import yaml
+from common.utils.dir_control import ensure_path_sep
+from common.utils.regular_control import regular
+
 sys.path.append(os.path.dirname(sys.path[0]))
+
 
 class YamlHandler:
     def __init__(self, file: str):
@@ -123,8 +126,5 @@ if __name__ == '__main__':
 
     a = GetYamlCaseData(path).get_yaml_case_data()
     print(a)
-    #b = YamlHandler(path)
-    #b.write_yaml_data("allureEpic",'v1.2')
-    #b.update_dict("case_common:allureEpic", 'v1222')
 
 

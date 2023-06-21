@@ -1,19 +1,22 @@
+import ast
+import os
+import sys
+from typing import Dict, Text
+
 import requests
 import urllib3
-import sys
-import os
-import ast
-from typing import Dict, Text, Union
-from common.allure.allure_tools import allure_step
-from common.db.MysqlHelper import SqlHandle
-from common.unit.TeardownDecorator import teardown_decorator
-from common.utils.ReadJson import JsonHandle
-from common.log.LogDecorator import request_decorator
-from common.log.run_time_decorator import execution_duration
-from common.log.LogHandler import LogHandler
-from common.utils.models import TestCase, RequestType, ResponseData
-from common.config import TOKEN_FILE
 from common.assertion.assert_control import AssertExecution
+from common.config import TOKEN_FILE
+from common.db.mysql_control import SqlHandle
+from common.decorator.allure_decorator import allure_decorator
+from common.decorator.assert_decorator import assert_decorator
+from common.decorator.request_decorator import request_decorator
+from common.decorator.runtime_decorator import execution_duration
+from common.decorator.sql_decorator import sql_assert
+from common.decorator.teardown_decorator import teardown_decorator
+from common.log.log_control import LogHandler
+from common.utils.json_control import JsonHandle
+from common.utils.models import TestCase, RequestType, ResponseData
 
 sys.path.append(os.path.dirname(sys.path[0]))
 
@@ -141,6 +144,7 @@ class RequestSend:
             else:
                 sql_data = self.__yaml_case.sql_data
                 sql_assert = self.__yaml_case.sql_assert
+
             # 判断不为空才执行校验   sql_data：可能为sql或None ；sql_assert：可能为0或1或None。 None不执行
             if sql_data and sql_assert is not None:
                 return AssertExecution().assert_execution(sql_data, sql_assert)
@@ -150,8 +154,7 @@ class RequestSend:
     def _check_params(
             self,
             res,
-            yaml_data: "TestCase",
-            sql_result: Union[bool, None]
+            yaml_data: "TestCase"
     ) -> "ResponseData":
         """
         :param res:
@@ -164,12 +167,14 @@ class RequestSend:
             "yaml_body": yaml_data.requestData,
             "yaml_assert_data": yaml_data.assert_data,
             "yaml_data": yaml_data,
+            "yaml_sql_data": self.__yaml_case.sql_data,
+            "yaml_sql_assert": self.__yaml_case.sql_assert,
 
-            "sql_result": sql_result,
             "req_url": res.url,
             "req_method": res.request.method,
             "req_headers": res.request.headers,
 
+            "res_sql_result": None,
             "res_data": res.text,
             "res_cookie": res.cookies,
             "res_time": self.response_elapsed_total_seconds(res),
@@ -237,32 +242,12 @@ class RequestSend:
                             is_yield['value'] = result[0]
         return is_yield
 
-    @classmethod
-    def api_allure_step(
-            cls,
-            *,
-            url: Text,
-            headers: Text,
-            method: Text,
-            data: Text,
-            assert_data: Text,
-            res_time: Text,
-            res: Text,
-            sql_result: bool
-    ) -> None:
-        """ 在allure中记录请求数据 """
-        allure_step("请求URL: ", url)
-        allure_step("请求方式: ", method)
-        allure_step("请求头: ", headers)
-        allure_step("请求数据: ", data)
-        allure_step("数据库校验结果: ", sql_result)
-        allure_step("校验数据: ", assert_data)
-        allure_step("响应耗时(ms): ", res_time)
-        allure_step("响应结果: ", res)
-
-    @teardown_decorator
-    @execution_duration(3000)
-    @request_decorator(switch=True)
+    @teardown_decorator  # 后置条件装饰器
+    @assert_decorator  # 断言装饰器
+    @allure_decorator  # allure步骤装饰器
+    @sql_assert  # 数据库校验装饰器  返回res_sql_result
+    @execution_duration(3000)  # 封装统计函数执行时间装饰器
+    @request_decorator(switch=True)  # 接口请求装饰器（打印请求信息日志）
     def http_request(self, **kwargs):
         # 判断yaml文件的is_run参数是否执行用例
         if self.__yaml_case.is_run or self.__yaml_case.is_run is None:
@@ -274,6 +259,7 @@ class RequestSend:
                 # RequestType.NONE.value: self.request_type_for_none,
                 # RequestType.EXPORT.value: self.request_type_for_export
             }
+
             # requests_type_mapping.get(self._yaml_case.requestType) 执行的函数，比如JSON，执行request_type_for_json的函数
             # 判断执行前置条件后是否有返回值
             if _is_yield := self.setup_handle(requests_type_mapping):
@@ -290,25 +276,10 @@ class RequestSend:
                     **kwargs
                 )
 
-            # 数据库校验
-            _sql_result = self._sql_data_handler()
-
             # 转换格式
             _res_data = self._check_params(
                 res=res,
-                yaml_data=self.__yaml_case,
-                sql_result=_sql_result
-            )
-            # 添加allure步骤
-            self.api_allure_step(
-                url=_res_data.req_url,
-                headers=str(_res_data.req_headers),
-                method=_res_data.req_method,
-                data=str(_res_data.yaml_body),
-                assert_data=str(_res_data.yaml_assert_data),
-                res_time=str(_res_data.res_time),
-                res=_res_data.res_data,
-                sql_result=_sql_result
+                yaml_data=self.__yaml_case
             )
             return _res_data
 

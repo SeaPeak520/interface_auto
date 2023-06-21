@@ -1,12 +1,14 @@
-import allure
-import xlrd3
 import os
 import sys
 
+import allure
+import xlrd3
+
 sys.path.append(os.path.dirname(sys.path[0]))
 
+
 class ExcelHandle:
-    def __init__(self,dataFile: str):
+    def __init__(self, dataFile: str):
         """
             :param book: book对象
         """

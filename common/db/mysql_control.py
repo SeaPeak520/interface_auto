@@ -1,17 +1,19 @@
+import os
+import sys
 from typing import List, Text, Union
+
 import allure
 import pymysql
-import sys
-import os
-from dbutils.pooled_db import PooledDB
-from common.utils import config
 from common.exceptions.exceptions import DataAcquisitionFailed, ValueTypeError
-from common.log.LogHandler import LogHandler
+from common.log.log_control import LogHandler
+from common.utils import config
 from common.utils.models import load_module_functions
+from dbutils.pooled_db import PooledDB
 
 sys.path.append(os.path.dirname(sys.path[0]))
 
-class MysqlHelper:
+
+class MysqlDB:
     # 初始化
     def __init__(self):
         self.conn = self.getmysqlconn(config.mysql['test_host'],
@@ -142,10 +144,12 @@ class MysqlHelper:
             self.conn.rollback()
             raise
 
-class SqlHandle(MysqlHelper):
+
+class SqlHandle(MysqlDB):
     def mapping_sqltype(self):
-        return load_module_functions(MysqlHelper)
-    def sql_handle(self,sql: str,state: str='all'):
+        return load_module_functions(MysqlDB)
+
+    def sql_handle(self, sql: str, state: str = 'all'):
         """
           :param sql: 要执行的sql
           :param state: num 查询数量 all查询所有 one查询单条

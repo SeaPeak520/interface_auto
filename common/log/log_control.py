@@ -3,8 +3,8 @@ import os
 import sys
 import time
 
-from common.utils.FileHelper import create_file
 from common.config import ROOT_DIR
+from common.utils.file_control import create_file
 
 sys.path.append(os.path.dirname(sys.path[0]))
 
@@ -13,7 +13,7 @@ sys.path.append(os.path.dirname(sys.path[0]))
 class AppFilter(logging.Filter):
     def __init__(self, file: str) -> None:
         """
-        :param file: LogHandler.py （文件名称）
+        :param file: log_control.py （文件名称）
         """
         self.file = file
 
@@ -34,7 +34,7 @@ class LogHandler:
 
     def __init__(self, file: str = os.path.basename(__file__), levels: str = 'info') -> None:
         """
-        :param file: LogHandler.py （文件名称） 在哪个文件执行输出的日志
+        :param file: log_control.py （文件名称） 在哪个文件执行输出的日志
         """
         self.file = file
         # 创建日志记录器

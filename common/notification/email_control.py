@@ -1,13 +1,16 @@
-import smtplib
 import os
+import smtplib
 import sys
-from common.log.LogHandler import LogHandler
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 from email.header import Header
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from email.utils import parseaddr, formataddr
+
+from common.log.log_control import LogHandler
 from common.utils import config
+
 sys.path.append(os.path.dirname(sys.path[0]))
+
 
 class EmailHelper:
     def __init__(self, info: dict[str, str | int] = None) -> None:

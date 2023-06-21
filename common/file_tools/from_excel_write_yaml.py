@@ -1,18 +1,19 @@
 import json
 import os
 
-from common.log.LogHandler import LogHandler
-from common.utils.ReadExcel import ExcelHandle
-from common.config import TESTDATA_FILE,TESTDATA_DIR
-from common.utils.DirHelper import mk_dir,ensure_path_sep
-from common.utils.FileHelper import create_file
-from common.utils.ReadYaml import YamlHandler
+from common.config import TESTDATA_FILE, TESTDATA_DIR
+from common.log.log_control import LogHandler
+from common.utils.dir_control import mk_dir, ensure_path_sep
+from common.utils.excel_control import ExcelHandle
+from common.utils.file_control import create_file
+from common.utils.yaml_control import YamlHandler
+
 
 class FromExcelWriteYaml():
     def __init__(self):
-        #创建日志对象
+        # 创建日志对象
         self.log = LogHandler(os.path.basename(__file__))
-        #创建excel对象
+        # 创建excel对象
         self.excel_handle = ExcelHandle(TESTDATA_FILE)
 
     # 获取测试文件的sheet名称列表 ['xiaofa', 'Sheet4']
@@ -56,28 +57,28 @@ class FromExcelWriteYaml():
         """解析地址映射配置文件的host参数并提取"""
         from common.utils import config
         host = address.split('.com')[0] + '.com'
-        if config.info['host1'] in host:
-            return "${{host(1)}}"
-        elif config.info['host2'] in host:
-            return "${{host(2)}}"
-        elif config.info['host3'] in host:
-            return "${{host(3)}}"
+        if config.info['gateway_host'] in host:
+            return "${{gateway_host}}"
+        elif config.info['lawyer_host'] in host:
+            return "${{lawyer_host}}"
+        elif config.info['callback_host'] in host:
+            return "${{callback_host}}"
         else:
             raise BaseException(f"host: {host} ,配置文件没有对应的host参数")
         
     def dataHandle_url(self,address):
         """解析地址提取URL"""
         return address.split('.com')[-1]
-        
-    def WriteYamlHandle(self):
 
-        #1、循环遍历sheet，过滤test目录，并创建目录到data下（当有用例时创建）
+    def write_yaml(self):
+
+        # 1、循环遍历sheet，过滤test目录，并创建目录到data下（当有用例时创建）
         for sheet in self.get_sheet:  # sheet名称列表循环
             if 'test' not in sheet:
                 module_list = []
                 # 获取sheet页的所有数据 并遍历
                 for i in self.excel_handle.get_sheet_data(sheetName=sheet):
-                    #把当前sheet的模块列表
+                    # 把当前sheet的模块列表
                     if i['模块'] not in module_list:
                         module_list.append(i['模块'])        
                 #2、循环sheet内的excel数据
@@ -237,4 +238,4 @@ class FromExcelWriteYaml():
 
 if __name__ =='__main__':
     #读取excel文件生成yaml用例
-    FromExcelWriteYaml().WriteYamlHandle()
+    FromExcelWriteYaml().write_yaml()

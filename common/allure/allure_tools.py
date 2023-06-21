@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import json
+
 import allure
 from common.utils.models import AllureAttachmentType
+
+
 def allure_step(step: str, var: str) -> None:
     """
     :param step: 步骤及附件名称

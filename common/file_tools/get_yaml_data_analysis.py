@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
-from typing import Union, Text,List
+from typing import Union, Text, List
 
-from common.utils.cache_control import CacheHandler
-from common.utils.models import RequestType, Method, TestCaseEnum, TestCase
-from common.utils.ReadJson import JsonHandle
 from common.config import TOKEN_FILE
-from common.utils.ReadYaml import GetYamlCaseData
+from common.utils.cache_control import CacheHandle
+from common.utils.json_control import JsonHandle
+from common.utils.models import RequestType, Method, TestCaseEnum, TestCase
+from common.utils.yaml_control import GetYamlCaseData
 
 
 class CaseDataCheck:
@@ -160,7 +160,7 @@ class GetTestCase:
         #用例数据集合
         case_lists = []
         for i in case_id_lists:
-            _data = CacheHandler.get_cache(i)
+            _data = CacheHandle.get_cache(i)
             case_lists.append(_data)
         return case_lists
 

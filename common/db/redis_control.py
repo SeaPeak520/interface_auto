@@ -1,9 +1,10 @@
-import redis
-import allure
-import sys
 import os
+import sys
+
+import allure
+import redis
+from common.log.log_control import LogHandler
 from common.utils import config
-from common.log.LogHandler import LogHandler
 
 sys.path.append(os.path.dirname(sys.path[0]))
 

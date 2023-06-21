@@ -3,12 +3,15 @@
 
 import datetime
 import json
+import os
+import time
+
 import pytest
 import requests
-
 from common.config import TOKEN_FILE, PRE_DATA_DIR
-from common.utils.ReadJson import JsonHandle
-from common.utils.ReadYaml import GetYamlCaseData
+from common.log.log_control import LogHandler
+from common.utils.json_control import JsonHandle
+from common.utils.yaml_control import GetYamlCaseData
 
 
 # @pytest.fixture(scope="session", autouse=False)
@@ -17,8 +20,8 @@ from common.utils.ReadYaml import GetYamlCaseData
 #     del_file(ensure_path_sep("\\report"))
 
 
-#每天自动获取token更新到token.json中
-@pytest.fixture(scope='session',autouse=True)
+# 每天自动获取token更新到token.json中
+@pytest.fixture(scope='session', autouse=True)
 def set_token():
     #获取token.json的内容
     token_dic = JsonHandle(TOKEN_FILE).get_json_data()
@@ -88,27 +91,26 @@ def set_token():
 #         allure_step("预期数据: ", in_data.assert_data)
 #         pytest.skip()
 
-# @pytest.fixture(scope='session')
-# def pytest_terminal_summary(terminalreporter):
-#     """
-#     收集测试结果
-#     """
-#     m = LogHandler(os.path.basename(__file__))
-#     _PASSED = len([i for i in terminalreporter.stats.get('passed', []) if i.when != 'teardown'])
-#     _ERROR = len([i for i in terminalreporter.stats.get('error', []) if i.when != 'teardown'])
-#     _FAILED = len([i for i in terminalreporter.stats.get('failed', []) if i.when != 'teardown'])
-#     _SKIPPED = len([i for i in terminalreporter.stats.get('skipped', []) if i.when != 'teardown'])
-#     _TOTAL = terminalreporter._numcollected
-#     _TIMES = time.time() - terminalreporter._sessionstarttime
-#     m.info(f"用例总数: {_TOTAL}")
-#     m.info(f"成功用例数：{_PASSED}")
-#     m.info(f"异常用例数: {_ERROR}")
-#     m.info(f"失败用例数: {_FAILED}")
-#     m.info(f"跳过用例数: {_SKIPPED}")
-#     m.info("用例执行时长: %.2f" % _TIMES + " s")
-#
-#     try:
-#         _RATE = _PASSED / _TOTAL * 100
-#         m.info("用例成功率: %.2f" % _RATE + " %")
-#     except ZeroDivisionError:
-#         m.info("用例成功率: 0.00 %")
+# 如果使用多线程会有统计问题
+def pytest_terminal_summary(terminalreporter):
+    """
+    收集测试结果
+    """
+    m = LogHandler(os.path.basename(__file__))
+    _TOTAL = terminalreporter._numcollected
+    _TIMES = time.time() - terminalreporter._sessionstarttime
+    _PASSED = len([i for i in terminalreporter.stats.get('passed', []) if i.when != 'teardown'])
+    _ERROR = len([i for i in terminalreporter.stats.get('error', []) if i.when != 'teardown'])
+    _FAILED = len([i for i in terminalreporter.stats.get('failed', []) if i.when != 'teardown'])
+    _SKIPPED = len([i for i in terminalreporter.stats.get('skipped', []) if i.when != 'teardown'])
+    m.info(f"用例总数: {_TOTAL}")
+    m.info(f"成功用例数：{_PASSED}")
+    m.info(f"异常用例数: {_ERROR}")
+    m.info(f"失败用例数: {_FAILED}")
+    m.info(f"跳过用例数: {_SKIPPED}")
+    m.info("用例执行时长: %.2f" % _TIMES + " s")
+    try:
+        _RATE = _PASSED / _TOTAL * 100
+        m.info("用例成功率: %.2f" % _RATE + " %")
+    except ZeroDivisionError:
+        m.info("错误，用例成功率: 0.00 %")

@@ -120,12 +120,14 @@ class ResponseData(BaseModel):
     yaml_body: Any
     yaml_assert_data: Dict
     yaml_data: "TestCase"
+    yaml_sql_data: Union[None, list, Text]
+    yaml_sql_assert: Union[None, list, Text]
 
-    sql_result: Union[bool, None]
     req_url: Text
     req_method: Text
     req_headers: Dict
 
+    res_sql_result: Union[bool, None]
     res_data: Any
     res_cookie: Dict
     res_time: Union[int, float]

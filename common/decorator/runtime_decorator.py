@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from common.log.LogHandler import LogHandler
+from common.log.log_control import LogHandler
 
 """
 统计请求运行时长装饰器，如请求响应时间超时

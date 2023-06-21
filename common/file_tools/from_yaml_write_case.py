@@ -2,20 +2,21 @@ import os
 import re
 import shutil
 
-from common.utils.ReadYaml import get_all_caseyaml, YamlHandler
 from common.config import TESTDATA_DIR, TEMPLATE_FILE, TESTCASE_DIR
-from common.utils.DirHelper import ensure_path_sep,mk_dir
-from common.utils.FileHelper import alter_file_content
-from common.log.LogHandler import LogHandler
+from common.log.log_control import LogHandler
+from common.utils.dir_control import ensure_path_sep, mk_dir
+from common.utils.file_control import alter_file_content
+from common.utils.yaml_control import get_all_caseyaml, YamlHandler
+
 
 # 读取yaml文件写入用例
 def WriteTestCase():
-    log =LogHandler(os.path.basename(__file__))
-    #获取测试数据目录的所有yaml文件路径list
+    log = LogHandler(os.path.basename(__file__))
+    # 获取测试数据目录的所有yaml文件路径list
     yamlfile_list = get_all_caseyaml(TESTDATA_DIR)
-    #遍历list
+    # 遍历list
     for yamlfile in yamlfile_list:
-        #yaml文件的名称  #caseCollectAdd
+        # yaml文件的名称  #caseCollectAdd
         yamlfile_name = os.path.basename(yamlfile).split('.yaml')[0]  
         #获取yaml文件所在的目录  #E:\pythonProject\new\data\Sheet4\案源收藏
         yamlfile_dir = ensure_path_sep(os.path.dirname(yamlfile))  
@@ -59,7 +60,7 @@ def WriteTestCase():
             #如果test文件存在，则判断test文件和yaml文件的用例是否一致
             with open(casefile_path, 'r') as f:
                 lines = f.readlines()
-                line = lines[10][10:]
+                line = lines[9][10:]
                 line_list = eval(line)
                 if case_list != line_list:
                     alter_file_content(casefile_path, str(line_list), str(case_list))

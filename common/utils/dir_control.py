@@ -37,5 +37,5 @@ def ensure_path_sep(path: Text) -> Text:
 
 
 if __name__ == '__main__':
-    a = ensure_path_sep('E:/pythonProject\\new\common\\utils/ReadYaml.py')
+    a = ensure_path_sep('E:/pythonProject\\new\common\\utils/yaml_control.py')
     print(a)

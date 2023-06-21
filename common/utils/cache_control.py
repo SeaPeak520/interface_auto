@@ -8,13 +8,15 @@
 import contextlib
 import os
 from typing import Any, Text, Union
+
 from common.config import CACHE_DIR
-from common.utils.DirHelper import ensure_path_sep
 from common.exceptions.exceptions import ValueNotFoundError
+from common.utils.dir_control import ensure_path_sep
 
 
 class Cache:
     """ 设置、读取缓存 """
+
     def __init__(self, filename: Union[Text, None]) -> None:
         # 如果filename不为空，则操作指定文件内容
         if filename:
@@ -73,7 +75,8 @@ class Cache:
 
 _cache_config = {}
 
-class CacheHandler:
+
+class CacheHandle:
     @staticmethod
     def get_cache(cache_data):
         try:

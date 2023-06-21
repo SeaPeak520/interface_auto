@@ -1,8 +1,10 @@
-from jsonpath import jsonpath
 import os
 import sys
 
+from jsonpath import jsonpath
+
 sys.path.append(os.path.dirname(sys.path[0]))
+
 
 # 通过表达式获取对应的数据
 def get_value(data: dict, key: str) -> list[str | int | float]:

@@ -2,8 +2,9 @@
 # -*- coding: utf-8 -*-
 
 import time
-from typing import Text
 from datetime import datetime
+from typing import Text
+
 
 def count_milliseconds(access_start=datetime.now(), access_end=datetime.now()):
     """
@@ -11,6 +12,7 @@ def count_milliseconds(access_start=datetime.now(), access_end=datetime.now()):
     :return:
     """
     return (access_end - access_start).seconds * 1000
+
 
 def timestamp_conversion(time_str: Text) -> int:
     """
