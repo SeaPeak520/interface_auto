@@ -76,7 +76,7 @@ class Cache:
 _cache_config = {}
 
 
-class CacheHandle:
+class CacheHandler:
     @staticmethod
     def get_cache(cache_data):
         try:

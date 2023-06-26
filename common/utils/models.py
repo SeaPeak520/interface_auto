@@ -1,6 +1,6 @@
 import types
 from enum import Enum, unique
-from typing import Text, Union, Dict, Any
+from typing import Text, Union, Dict, Any, Optional, List
 
 from pydantic import BaseModel
 
@@ -43,11 +43,11 @@ class TestCaseEnum(Enum):
     HEADERS = ("headers", True)
     REQUEST_TYPE = ("requestType", True)
     REQUEST_DATA = ("requestData", True)
+    DE_CASE = ("dependence_case", True)
+    DE_CASE_DATA = ("dependence_case_data", False)
     SQL_DATA = ("sql_data", True)
     SQL_ASSERT = ("sql_assert", True)
-    
-    DE_CASE = ("dependence_case", False)
-    DE_CASE_DATA = ("dependence_case_data", False)
+
     CURRENT_RE_SET_CACHE = ("current_request_set_cache", False)
     SQL = ("sql", False)
     ASSERT_DATA = ("assert_data", True)
@@ -78,23 +78,50 @@ class RequestType(Enum):
     EXPORT = "EXPORT"
     NONE = "NONE"
 
+
+@unique
+class DependentType(Enum):
+    """
+    数据依赖相关枚举
+    """
+    RESPONSE = 'response'
+    REQUEST = 'request'
+    SQL_DATA = 'sqlData'
+    CACHE = "cache"
+
+
+class DependentData(BaseModel):
+    dependent_type: Text
+    dependent_sql: Union[Text, None]
+    jsonpath: Union[Text, None]
+    set_cache: Optional[Text]
+    replace_key: Union[Dict, None]
+
+
+class DependentCaseData(BaseModel):
+    case_id: Text
+    # dependent_data: List[DependentData]
+    dependent_data: Union[None, List[DependentData]] = None
+
+
 class TestCase(BaseModel):
     url: Text
     method: Text
     remark: Text
     # assert_data: Union[Dict, Text] = Field(..., alias="assert")
-    is_run: Union[None, bool, Text]
+    is_run: Union[None, bool]
     headers: Union[None, Dict, Text]
     requestType: Text
-    requestData: Union[Dict, Text ,None, list]
-    #dependence_case: Union[None, bool] = False
-    #dependence_case_data: Optional[Union[None, List["DependentCaseData"], Text]] = None
-    sql_data: Union[list, Text,None]
-    sql_assert: Union[list, Text,None]
+    requestData: Union[Dict, Text, None, list]
+    dependence_case: Union[None, bool] = False
+    dependence_case_data: Optional[Union[None, List["DependentCaseData"], Text]] = None
+    sql_data: Union[list, Text, None]
+    sql_assert: Union[list, Text, None]
     assert_data: Union[Dict, Text]
-    #current_request_set_cache: Optional[List["CurrentRequestSetCache"]]
-    #sleep: Optional[Union[int, float]]
+    # current_request_set_cache: Optional[List["CurrentRequestSetCache"]]
+    # sleep: Optional[Union[int, float]]
     process: Union[Dict, Text]
+
 
 
 class Config(BaseModel):
@@ -134,6 +161,7 @@ class ResponseData(BaseModel):
     res_status_code: int
 
     file: Text
+    is_decorator: bool
 
 
 class SetupTeardown_Type(Enum):

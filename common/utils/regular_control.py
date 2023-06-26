@@ -1,11 +1,15 @@
+import ast
 import datetime
 import os
 import random
 import re
 
+from common.utils.models import TestCase
+
 
 class Context:
     """ 正则替换 """
+
     def __init__(self):
         from faker import Faker
         self.faker = Faker(locale='zh_CN')
@@ -123,7 +127,7 @@ def cache_regular(target: str) -> str:
     getattr(Context(), func_name)(value_name) 执行Context类的 func_name函数，传入value_name
     """
     from common.log.log_control import LogHandler
-    from common.utils.cache_control import CacheHandle
+    from common.utils.cache_control import CacheHandler
     log = LogHandler(os.path.basename(__file__))
     try:
         # 正则获取 $cache{login_init}中的值 --> login_init
@@ -133,7 +137,7 @@ def cache_regular(target: str) -> str:
                 pattern = re.compile(
                     r'\$cache\{' + key.replace('$', "\$").replace('[', '\[') + r'\}'
                 )
-                cache_data = CacheHandle.get_cache(key)
+                cache_data = CacheHandler.get_cache(key)
                 # 使用sub方法，替换已经拿到的内容
                 target = re.sub(pattern, str(cache_data), target)
         return target
@@ -146,10 +150,11 @@ def cache_regular(target: str) -> str:
         raise
 
 
-def regular(target: str) -> str:
-    config_target = config_regular(target)
-    cache_target = cache_regular(config_target)
-    return cache_target
+def yamlcase_regular(yaml_case: str) -> "TestCase":
+    _regular_data = cache_regular(f"{yaml_case.dict()}")
+    _regular_data = ast.literal_eval(_regular_data)
+    _new_data = TestCase(**_regular_data)
+    return _new_data
 
 
 if __name__ == '__main__':
@@ -158,4 +163,4 @@ if __name__ == '__main__':
 
     file = f'{TESTDATA_DIR}xiaofa/案源收藏/caseCollectAdd.yaml'
     yaml_data = str(YamlHandler(file).get_yaml_data())
-    regular(yaml_data)
+    yamlcase_regular(yaml_data)

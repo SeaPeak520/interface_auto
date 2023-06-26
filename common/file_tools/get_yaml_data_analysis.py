@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import json
 import os
 from typing import Union, Text, List
 
 from common.config import TOKEN_FILE
-from common.utils.cache_control import CacheHandle
+from common.utils.cache_control import CacheHandler
 from common.utils.json_control import JsonHandle
 from common.utils.models import RequestType, Method, TestCaseEnum, TestCase
 from common.utils.yaml_control import GetYamlCaseData
@@ -91,24 +92,24 @@ class CaseDataCheck:
             RequestType,
             self.case_data.get(TestCaseEnum.REQUEST_TYPE.value[0])
         )
-        
+
     @property
-    def get_sql_data(self) -> Union[list, Text,None]:
+    def get_sql_data(self) -> Union[list, Text, None]:
         return self.case_data.get(TestCaseEnum.SQL_DATA.value[0])
-    
+
     @property
-    def get_sql_assert(self) -> Union[list, Text,None]:
+    def get_sql_assert(self) -> Union[list, Text, None]:
         return self.case_data.get(TestCaseEnum.SQL_ASSERT.value[0])
 
-    # @property
-    # def get_dependence_case_data(self):
-    #     _dep_data = self.case_data.get(TestCaseEnum.DE_CASE.value[0])
-    #     if _dep_data:
-    #         assert self.case_data.get(TestCaseEnum.DE_CASE_DATA.value[0]) is not None, (
-    #             f"程序中检测到您的 case_id 为 {self.case_id} 的用例存在依赖，但是 {_dep_data} 缺少依赖数据."
-    #             f"如已填写，请检查缩进是否正确， 用例路径: {self.file_path}"
-    #         )
-    #     return self.case_data.get(TestCaseEnum.DE_CASE_DATA.value[0])
+    @property
+    def get_dependence_case_data(self):
+        _dep_data = self.case_data.get(TestCaseEnum.DE_CASE.value[0])
+        if _dep_data:
+            assert self.case_data.get(TestCaseEnum.DE_CASE_DATA.value[0]) is not None, (
+                f"程序中检测到您的 case_id 为 {self.case_id} 的用例存在依赖，但是 {_dep_data} 缺少依赖数据."
+                f"如已填写，请检查缩进是否正确， 用例路径: {self.file_path}"
+            )
+        return self.case_data.get(TestCaseEnum.DE_CASE_DATA.value[0])
 
     @property
     def get_assert(self):
@@ -138,13 +139,13 @@ class CaseData(CaseDataCheck):
                     'headers': super().get_headers,
                     'requestType': super().get_request_type,
                     'requestData': self.case_data.get(TestCaseEnum.REQUEST_DATA.value[0]),
-                    #'dependence_case': self.case_data.get(TestCaseEnum.DE_CASE.value[0]),
-                    #'dependence_case_data': self.get_dependence_case_data,
-                    #"current_request_set_cache": self.case_data.get(TestCaseEnum.CURRENT_RE_SET_CACHE.value[0]),
+                    'dependence_case': self.case_data.get(TestCaseEnum.DE_CASE.value[0]),
+                    'dependence_case_data': self.get_dependence_case_data,
+                    # "current_request_set_cache": self.case_data.get(TestCaseEnum.CURRENT_RE_SET_CACHE.value[0]),
                     "sql_data": self.get_sql_data,
                     "sql_assert": self.get_sql_assert,
                     "assert_data": self.get_assert,
-                    #"sleep": self.case_data.get(TestCaseEnum.SLEEP.value[0]),
+                    # "sleep": self.case_data.get(TestCaseEnum.SLEEP.value[0]),
                     "process": self.case_data.get(TestCaseEnum.PROCESS.value[0])
                 }
                 if case_id_switch is True:
@@ -160,12 +161,13 @@ class GetTestCase:
         #用例数据集合
         case_lists = []
         for i in case_id_lists:
-            _data = CacheHandle.get_cache(i)
+            _data = CacheHandler.get_cache(i)
             case_lists.append(_data)
         return case_lists
 
 if __name__ == '__main__':
     from common.config import TESTDATA_DIR
-    file = f'{TESTDATA_DIR}xiaofa/案源收藏/caseCollectConcel.yaml'
-    case_data = CaseData(file).case_process(case_id_switch=False)
-    #print(file)
+
+    file = f'{TESTDATA_DIR}xiaofa/抽盲盒活动/lottery_time.yaml'
+    case_data = CaseData(file).case_process(case_id_switch=True)
+    print(json.dumps(case_data[0], ensure_ascii=False))

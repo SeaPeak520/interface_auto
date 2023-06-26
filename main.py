@@ -17,10 +17,10 @@ if __name__ == "__main__":
     args = [
         "-s",
         "-v",
-        "-n=2",  # 收集用例结果会出现重复执行的问题
+        # "-n=2",  # 收集用例结果会出现重复执行的问题
         "--reruns=2",
         "--reruns-delay=3",
-        f"{ROOT_DIR}test_case/xiaofa/案源收藏/",
+        f"{ROOT_DIR}test_case/xiaofa/",
         f"--alluredir={ROOT_DIR}report/allure_results",
         "--clean-alluredir"
     ]

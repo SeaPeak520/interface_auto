@@ -3,7 +3,7 @@
 
 from common.config import TESTDATA_DIR
 from common.file_tools.get_yaml_data_analysis import CaseData
-from common.utils.cache_control import CacheHandle, _cache_config
+from common.utils.cache_control import CacheHandler, _cache_config
 from common.utils.yaml_control import get_all_caseyaml
 
 
@@ -25,7 +25,7 @@ def write_case_process():
                     case_id_exit = k in _cache_config.keys()
                     # 如果case_id 不存在，则将用例写入缓存池中
                     if not case_id_exit:
-                        CacheHandle.update_cache(cache_name=k, value=v)
+                        CacheHandler.update_cache(cache_name=k, value=v)
                     else:
                         raise ValueError(f"case_id: {k} 存在重复项, 请修改case_id\n"
                                          f"文件路径: {i}")

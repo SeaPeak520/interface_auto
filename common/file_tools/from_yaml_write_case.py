@@ -1,3 +1,4 @@
+import ast
 import os
 import re
 import shutil
@@ -60,8 +61,8 @@ def WriteTestCase():
             #如果test文件存在，则判断test文件和yaml文件的用例是否一致
             with open(casefile_path, 'r') as f:
                 lines = f.readlines()
-                line = lines[9][10:]
-                line_list = eval(line)
+                line = lines[10][10:]
+                line_list = ast.literal_eval(line)
                 if case_list != line_list:
                     alter_file_content(casefile_path, str(line_list), str(case_list))
                     log.info(f'更新用例数：由 {case_list} 变更为 {line_list}')

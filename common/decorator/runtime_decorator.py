@@ -15,16 +15,17 @@ def execution_duration(timeout: int=3000):
     def decorator(func):
         def swapper(*args, **kwargs):
             res = func(*args, **kwargs)
-            log = LogHandler(res.file)
-            run_time = res.res_time
-            # 计算时间戳毫米级别，如果时间大于number，则打印 函数名称 和运行时间
-            if run_time > timeout:
-                log.error(
-                    "\n==============================================\n"
-                    "测试用例执行时间较长，请关注.\n"
-                    f"函数运行时间: {run_time} ms\n"
-                    f"测试用例相关数据: {res}\n"
-                    "=================================================")
+            if res and res.is_decorator:
+                log = LogHandler(res.file)
+                run_time = res.res_time
+                # 计算时间戳毫米级别，如果时间大于number，则打印 函数名称 和运行时间
+                if run_time > timeout:
+                    log.error(
+                        "\n==============================================\n"
+                        "测试用例执行时间较长，请关注.\n"
+                        f"函数运行时间: {run_time} ms\n"
+                        f"测试用例相关数据: {res}\n"
+                        "=================================================")
             return res
         return swapper
     return decorator

@@ -10,17 +10,12 @@ import pytest
 import requests
 from common.config import TOKEN_FILE, PRE_DATA_DIR
 from common.log.log_control import LogHandler
+from common.utils.cache_control import CacheHandler
 from common.utils.json_control import JsonHandle
 from common.utils.yaml_control import GetYamlCaseData
 
 
-# @pytest.fixture(scope="session", autouse=False)
-# def clear_report():
-#     """如clean命名无法删除报告，这里手动删除"""
-#     del_file(ensure_path_sep("\\report"))
-
-
-# 每天自动获取token更新到token.json中
+# 每天自动获取token更新到token.json中,并加到缓存
 @pytest.fixture(scope='session', autouse=True)
 def set_token():
     #获取token.json的内容
@@ -33,11 +28,16 @@ def set_token():
     if current_time > token_time:
         token_yaml = f'{PRE_DATA_DIR}Token.yaml'
         pre_data = GetYamlCaseData(token_yaml).get_yaml_case_data()['Token']
-        response = requests.request(method=pre_data['method'], url=pre_data['url'],headers=pre_data['header'],params=pre_data['params'],verify=False)
+        response = requests.request(method=pre_data['method'], url=pre_data['url'], headers=pre_data['header'],
+                                    params=pre_data['params'], verify=False)
         res = json.loads(response.text)
         token_dic['time'] = current_time
-        token_dic['token'] = f"Bearer {res['data']['token']['token']}"
+        token = f"Bearer {res['data']['token']['token']}"
+        token_dic['token'] = token
         JsonHandle(TOKEN_FILE).set_json_data(token_dic)
+        CacheHandler.update_cache(cache_name='token', value=token)
+    else:
+        CacheHandler.update_cache(cache_name='token', value=token_dic['token'])
 
 
 # def pytest_collection_modifyitems(items):
@@ -77,19 +77,19 @@ def set_token():
 #     config.addinivalue_line("markers", '回归测试')
 
 
-# @pytest.fixture(scope="function", autouse=True)
-# def case_skip(in_data):
+# def case_skip():
 #     """处理跳过用例"""
-#     in_data = TestCase(**in_data)
-#     if ast.literal_eval(cache_regular(str(in_data.is_run))) is False:
-#         allure.dynamic.title(in_data.detail)
-#         allure_step_no(f"请求URL: {in_data.is_run}")
-#         allure_step_no(f"请求方式: {in_data.method}")
-#         allure_step("请求头: ", in_data.headers)
-#         allure_step("请求数据: ", in_data.data)
-#         allure_step("依赖数据: ", in_data.dependence_case_data)
-#         allure_step("预期数据: ", in_data.assert_data)
-#         pytest.skip()
+#     pytest.skip()
+# in_data = TestCase(**in_data)
+# if ast.literal_eval(cache_regular(str(in_data.is_run))) is False:
+#     allure.dynamic.title(in_data.detail)
+#     allure_step_no(f"请求URL: {in_data.is_run}")
+#     allure_step_no(f"请求方式: {in_data.method}")
+#     allure_step("请求头: ", in_data.headers)
+#     allure_step("请求数据: ", in_data.data)
+#     allure_step("依赖数据: ", in_data.dependence_case_data)
+#     allure_step("预期数据: ", in_data.assert_data)
+
 
 # 如果使用多线程会有统计问题
 def pytest_terminal_summary(terminalreporter):

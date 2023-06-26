@@ -6,7 +6,6 @@ from typing import Dict, Text
 import requests
 import urllib3
 from common.assertion.assert_control import AssertExecution
-from common.config import TOKEN_FILE
 from common.db.mysql_control import SqlHandle
 from common.decorator.allure_decorator import allure_decorator
 from common.decorator.assert_decorator import assert_decorator
@@ -15,8 +14,10 @@ from common.decorator.runtime_decorator import execution_duration
 from common.decorator.sql_decorator import sql_assert
 from common.decorator.teardown_decorator import teardown_decorator
 from common.log.log_control import LogHandler
-from common.utils.json_control import JsonHandle
+from common.unit import case_skip
+from common.unit.dependent_case import DependentCase
 from common.utils.models import TestCase, RequestType, ResponseData
+from common.utils.regular_control import yamlcase_regular, cache_regular
 
 sys.path.append(os.path.dirname(sys.path[0]))
 
@@ -35,19 +36,6 @@ class RequestSend:
         except AttributeError:
             return 0.00
 
-    def check_headers_data(
-            self,
-            headers: Dict) -> Dict:
-        """
-        headers参数校验
-        @return:
-        """
-        # headers = ast.literal_eval(cache_regular(str(headers)))
-        # 判断authorization参数是否在headers中，存在且为True 执行
-        if any(i == 'authorization' for i in headers.keys()) and headers['authorization']:
-            headers['authorization'] = JsonHandle(TOKEN_FILE).get_json_data()['token']
-        return headers
-
     def request_type_for_json(
             self,
             headers: Dict,
@@ -55,10 +43,6 @@ class RequestSend:
             is_setup: bool = False,
             **kwargs):
         """ 判断请求类型为json格式 传dict"""
-        # kwargs其他传入的参数，判断是否更新请求参数的值（用于前置请求后查询数据库的值作为请求参数）
-        if kwargs:
-            self.__yaml_case.requestData[kwargs['is_yield']['key']] = kwargs['is_yield']['value']
-        _headers = self.check_headers_data(headers)
         # 用例的前置接口请求
         if is_setup:
             _requestData = self.__yaml_case.process['setup']['request']['requestData']
@@ -72,7 +56,7 @@ class RequestSend:
             method=method,
             url=_url,
             json=_requestData,
-            headers=_headers,
+            headers=headers,
             verify=False,
         )
 
@@ -83,10 +67,6 @@ class RequestSend:
             is_setup: bool = False,
             **kwargs):
         """处理 requestType 为 params 传dict"""
-        # kwargs其他传入的参数，判断是否更新请求参数的值（用于前置请求后查询数据库的值作为请求参数）
-        if kwargs:
-            self.__yaml_case.requestData[kwargs['is_yield']['key']] = kwargs['is_yield']['value']
-        _headers = self.check_headers_data(headers)
         # 用例的前置接口请求
         if is_setup:
             _requestData = self.__yaml_case.process['setup']['request']['requestData']
@@ -99,7 +79,7 @@ class RequestSend:
         return requests.request(
             method=method,
             url=_url,
-            headers=_headers,
+            headers=headers,
             verify=False,
             params=_requestData,
         )
@@ -111,10 +91,6 @@ class RequestSend:
             is_setup: bool = False,
             **kwargs):
         """判断 requestType 为 data 类型"""
-        # kwargs其他传入的参数，判断是否更新请求参数的值（用于前置请求后查询数据库的值作为请求参数）即 is_yield参数
-        if kwargs:
-            self.__yaml_case.requestData[kwargs['is_yield']['key']] = kwargs['is_yield']['value']
-        _headers = self.check_headers_data(headers)
         # 用例的前置接口请求
         if is_setup:
             _requestData = self.__yaml_case.process['setup']['request']['params']
@@ -128,7 +104,7 @@ class RequestSend:
             method=method,
             url=_url,
             data=_requestData,
-            headers=_headers,
+            headers=headers,
             verify=False,
         )
 
@@ -154,7 +130,8 @@ class RequestSend:
     def _check_params(
             self,
             res,
-            yaml_data: "TestCase"
+            yaml_data: "TestCase",
+            is_decorator: bool = True
     ) -> "ResponseData":
         """
         :param res:
@@ -179,7 +156,9 @@ class RequestSend:
             "res_cookie": res.cookies,
             "res_time": self.response_elapsed_total_seconds(res),
             "res_status_code": res.status_code,
-            "file": os.path.basename(__file__)
+
+            "file": os.path.basename(__file__),
+            "is_decorator": is_decorator
 
         }
 
@@ -200,47 +179,24 @@ class RequestSend:
         else:
             return None
 
-    def setup_handle(self, requests_type_mapping):
+    def setup_handler(self, requests_type_mapping):
         """前置条件的数据处理"""
         # 如果process参数所有key不包含‘setup’，返回 None（全部为Ture才执行）
         if all('setup' not in i for i in self.__yaml_case.process.keys()):
             return None
         setup_data = self.__yaml_case.process['setup']
         setup_key_list = list(setup_data.keys())
-        is_yield = {}
         for data in setup_key_list:
             # 前置-sql数据处理
             if 'sql' in data.lower():
-                if 'num' in data.lower():
-                    self.mysql.data_type(setup_data[data], state='num')
-                else:
-                    self.mysql.data_type(setup_data[data])
+                self.mysql.data_type(setup_data[data])
             # 前置-接口数据处理
             if 'request' in data.lower():
                 method = setup_data[data]['method']
                 headers = setup_data[data]['headers']
                 request_type = self.request_type(headers)
-
-                headers['authorization'] = JsonHandle(TOKEN_FILE).get_json_data()['token']
+                headers = ast.literal_eval(cache_regular(str(headers)))
                 requests_type_mapping.get(request_type.upper())(headers, method, is_setup=True)
-            # 前置-查询数据库返回到请求参数处理
-            if 'is_yield' in data.lower():
-                is_yield_data = setup_data[data]
-                is_yield_data_list = list(is_yield_data.keys())
-                # 遍历is_yield_data_list
-                for k in is_yield_data_list:
-                    # k包含'num'字段，则查询数量 （case_num）  查询num return 1
-                    if 'num' in k:
-                        result = self.mysql.select(is_yield_data[k], state='num')
-                        is_yield['key'] = k.split('_')[0]
-                        is_yield['value'] = result
-
-                    else:
-                        # 判断数据库是否有值来返回到用例里  查询one return (1,)
-                        if result := self.mysql.select(is_yield_data[k], state='one'):
-                            is_yield['key'] = k
-                            is_yield['value'] = result[0]
-        return is_yield
 
     @teardown_decorator  # 后置条件装饰器
     @assert_decorator  # 断言装饰器
@@ -248,43 +204,53 @@ class RequestSend:
     @sql_assert  # 数据库校验装饰器  返回res_sql_result
     @execution_duration(3000)  # 封装统计函数执行时间装饰器
     @request_decorator(switch=True)  # 接口请求装饰器（打印请求信息日志）
-    def http_request(self, **kwargs):
+    def http_request(self, dependent_switch=True, dependence=False, **kwargs):
+        requests_type_mapping = {
+            RequestType.JSON.value: self.request_type_for_json,
+            RequestType.DATA.value: self.request_type_for_data,
+            RequestType.PARAMS.value: self.request_type_for_params
+            # RequestType.FILE.value: self.request_type_for_file,
+            # RequestType.NONE.value: self.request_type_for_none,
+            # RequestType.EXPORT.value: self.request_type_for_export
+        }
         # 判断yaml文件的is_run参数是否执行用例
-        if self.__yaml_case.is_run or self.__yaml_case.is_run is None:
-            requests_type_mapping = {
-                RequestType.JSON.value: self.request_type_for_json,
-                RequestType.DATA.value: self.request_type_for_data,
-                RequestType.PARAMS.value: self.request_type_for_params
-                # RequestType.FILE.value: self.request_type_for_file,
-                # RequestType.NONE.value: self.request_type_for_none,
-                # RequestType.EXPORT.value: self.request_type_for_export
-            }
-
-            # requests_type_mapping.get(self._yaml_case.requestType) 执行的函数，比如JSON，执行request_type_for_json的函数
-            # 判断执行前置条件后是否有返回值
-            if _is_yield := self.setup_handle(requests_type_mapping):
-                res = requests_type_mapping.get(self.__yaml_case.requestType)(
-                    headers=self.__yaml_case.headers,
-                    method=self.__yaml_case.method,
-                    is_yield=_is_yield,
-                    **kwargs
-                )
+        if self.__yaml_case.is_run is True or self.__yaml_case.is_run is None:
+            # 非依赖要执行的接口时 执行前置条件
+            if not dependence:
+                self.setup_handler(requests_type_mapping)
+            # 如果有依赖数据统一在那边做处理，否则直接处理缓存
+            if dependent_switch is True:
+                # 把self.__yaml_case传到DependentCase类处理，返回正则匹配到的数据
+                self.__yaml_case = DependentCase(self.__yaml_case).get_dependent_data()
             else:
-                res = requests_type_mapping.get(self.__yaml_case.requestType)(
-                    headers=self.__yaml_case.headers,
-                    method=self.__yaml_case.method,
-                    **kwargs
-                )
+                # self.__yaml_case做缓存替换处理
+                self.__yaml_case = yamlcase_regular(self.__yaml_case)
+            # requests_type_mapping.get(self._yaml_case.requestType) 执行的函数，比如JSON，执行request_type_for_json的函数
+            # 判断依赖数据，不执行装饰器
+
+            res = requests_type_mapping.get(self.__yaml_case.requestType)(
+                headers=self.__yaml_case.headers,
+                method=self.__yaml_case.method,
+                **kwargs
+            )
 
             # 转换格式
-            _res_data = self._check_params(
-                res=res,
-                yaml_data=self.__yaml_case
-            )
+            if dependence:
+                _res_data = self._check_params(
+                    res=res,
+                    yaml_data=self.__yaml_case,
+                    is_decorator=False
+                )
+            else:
+                _res_data = self._check_params(
+                    res=res,
+                    yaml_data=self.__yaml_case
+                )
             return _res_data
 
         else:
-            self.log.info(f'{self.__yaml_case.remark}用例不执行')
+            self.log.info(f'[{self.__yaml_case.remark}]用例不执行')
+            case_skip()
 
 
 if __name__ == '__main__':

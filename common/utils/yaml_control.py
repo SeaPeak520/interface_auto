@@ -4,7 +4,7 @@ import sys
 
 import yaml
 from common.utils.dir_control import ensure_path_sep
-from common.utils.regular_control import regular
+from common.utils.regular_control import config_regular
 
 sys.path.append(os.path.dirname(sys.path[0]))
 
@@ -97,7 +97,7 @@ class GetYamlCaseData(YamlHandler):
         """
         _yaml_data = self.get_yaml_data()
         # 正则处理yaml文件中的数据
-        re_data = regular(str(_yaml_data))
+        re_data = config_regular(str(_yaml_data))
         return ast.literal_eval(re_data)
 
 
