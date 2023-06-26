@@ -24,7 +24,27 @@ caseCollectConcel:
   requestType: params
   #请求参数
   requestData:
-    caseId: 18996
+    caseId: $cache{caseCollectConcel_setup_case_id}   #使用依赖接口的缓存
+  # 依赖用例数据
+  dependence_case: true
+  dependence_case_data:
+    - case_id: caseCollectAdd #依赖用例名称
+      dependent_data:
+        - dependent_type: sqlData  #从sqlData 或接口响应（response）获取
+          dependent_sql: select case_id from case_collect_info where user_id=1 and
+            case_id=1;   #单条sql，当dependent_type为sqlData时填写
+          jsonpath:    #当dependent_type为response时填写，$.code
+          set_cache: caseCollectConcel_setup_case_id  #把dependent_sql的执行结果设置缓存
+          replace_key: #把值替换到依赖用例的请求参数（注意不是当前执行用例）
+            caseId: 18996
+            name: "测试"
+    - case_id: caseCollectConcel
+      dependent_data: #依赖
+        - dependent_type: response  #从sql 或接口响应（response）获取
+          dependent_sql:
+          jsonpath: $.code   #jsonpath匹配
+          set_cache: v_code   #设置缓存
+          replace_key:
   #数据库校验
   sql_data: select * from table where user_id=1 and case_id=1;
   sql_assert: 0
