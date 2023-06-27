@@ -67,7 +67,7 @@ class MysqlDB:
             raise
 
     @allure.step('执行查询sql')
-    def select(self, sql: str, state: str = 'all') -> Union[tuple,int]:
+    def select(self, sql: str, state: str = 'all') -> Union[tuple, int]:
         """
         :param sql: 要执行的sql
         :param state: all| one | num
@@ -145,11 +145,11 @@ class MysqlDB:
             raise
 
 
-class SqlHandle(MysqlDB):
+class SqlHandler(MysqlDB):
     def mapping_sqltype(self):
         return load_module_functions(MysqlDB)
 
-    def sql_handle(self, sql: str, state: str = 'all'):
+    def execution_sql(self, sql: str, state: str = 'all'):
         """
           :param sql: 要执行的sql
           :param state: num 查询数量 all查询所有 one查询单条
@@ -158,24 +158,27 @@ class SqlHandle(MysqlDB):
         sqltype = sql[:6].lower()
         if any(i in sqltype for i in _sqltype):
             if sqltype == 'select':
-                return self.mapping_sqltype()[sqltype](self,sql,state)
+                return self.mapping_sqltype()[sqltype](self, sql, state)
             else:
-                return self.mapping_sqltype()[sqltype](self,sql)
+                return self.mapping_sqltype()[sqltype](self, sql)
         else:
-            raise DataAcquisitionFailed(f"sql类型不正确，应为{_sqltype}") 
-    
-    #_type值，传num
-    #state值控制查询单条还是全部，不传查全部，传one查单条
-    def data_type(self, sql: Union[List,None,Text],state: str='all'):
+            raise DataAcquisitionFailed(f"sql类型不正确，应为{_sqltype}")
+
+            # _type值，传num
+
+    # state值控制查询单条还是全部，不传查全部，传one查单条
+    def execution_by_sql_type(self, sql: Union[List, None, Text], state: str = 'all'):
         if isinstance(sql, list):
-            return [self.sql_handle(i,state) for i in sql]
+            return [self.execution_sql(i, state) for i in sql]
         elif isinstance(sql, str):
-            return self.sql_handle(sql,state)
+            return self.execution_sql(sql, state)
         else:
-            raise ValueTypeError(f"传入数据类型不正确，接受的是list或str:{sql}")
+            raise ValueTypeError(f"传入数据类型不正确，接受的是list或str: {sql}")
+
 
 if __name__ == "__main__":
     # 用法
     sql = "select * from table where user_id=1 and case_id=1;"
-    s = SqlHandle()
-    print(s.sql_handle(sql,state='num'))
+    sqkl = ["select * from "]
+    s = SqlHandler()
+    print(s.sql_handle(sql, state='num'))

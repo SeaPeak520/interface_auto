@@ -7,17 +7,17 @@ import xlrd3
 sys.path.append(os.path.dirname(sys.path[0]))
 
 
-class ExcelHandle:
+class ExcelHandler:
     def __init__(self, dataFile: str):
         """
             :param book: book对象
         """
         self.book = xlrd3.open_workbook(dataFile)
-    
-    #获取sheet集合
-    @property 
+
+    # 获取sheet集合
+    @property
     def get_sheet(self):
-        return self.book.sheet_names()  #['test', 'xiaofa']
+        return self.book.sheet_names()  # ['test', 'xiaofa']
     
     #获取某个sheet的标签数据
     def get_sheet_book_name(self,sheetName):
@@ -113,5 +113,6 @@ class ExcelHandle:
 if __name__ == '__main__':
     # 用法
     from common.config import TESTDATA_FILE
-    b = ExcelHandle(TESTDATA_FILE)
+
+    b = ExcelHandler(TESTDATA_FILE)
     print(b.get_sheet_data())

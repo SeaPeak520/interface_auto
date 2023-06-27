@@ -94,7 +94,7 @@ class DependentData(BaseModel):
     dependent_type: Text
     dependent_sql: Union[Text, None]
     jsonpath: Union[Text, None]
-    set_cache: Optional[Text]
+    set_cache: Union[Text, None]
     replace_key: Union[Dict, None]
 
 
@@ -109,11 +109,11 @@ class TestCase(BaseModel):
     method: Text
     remark: Text
     # assert_data: Union[Dict, Text] = Field(..., alias="assert")
-    is_run: Union[None, bool]
+    is_run: Optional[bool]
     headers: Union[None, Dict, Text]
     requestType: Text
-    requestData: Union[Dict, Text, None, list]
-    dependence_case: Union[None, bool] = False
+    requestData: Union[Dict, Text, List, None]
+    dependence_case: Union[None, Dict, Text] = False
     dependence_case_data: Optional[Union[None, List["DependentCaseData"], Text]] = None
     sql_data: Union[list, Text, None]
     sql_assert: Union[list, Text, None]
@@ -121,8 +121,6 @@ class TestCase(BaseModel):
     # current_request_set_cache: Optional[List["CurrentRequestSetCache"]]
     # sleep: Optional[Union[int, float]]
     process: Union[Dict, Text]
-
-
 
 class Config(BaseModel):
     info: Dict
@@ -154,7 +152,7 @@ class ResponseData(BaseModel):
     req_method: Text
     req_headers: Dict
 
-    res_sql_result: Union[bool, None]
+    res_sql_result: Optional[bool]
     res_data: Any
     res_cookie: Dict
     res_time: Union[int, float]
@@ -201,15 +199,3 @@ class AllureAttachmentType(Enum):
     WEBM = "webm"
 
     PDF = "pdf"
-    
-class YamlInfoData(BaseModel):
-    host: Text
-    url: Text
-    method: Text
-    remark: Text
-    is_run: Union[None , bool]
-    headers: Union[None , Dict]
-    requestType: Text
-    requestData: Union[None , Dict]
-    assert_data: Union[None , Dict]
-    process: Union[None , Dict]

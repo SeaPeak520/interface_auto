@@ -1,10 +1,11 @@
+import ast
 import json
 import os
 
 from common.config import TESTDATA_FILE, TESTDATA_DIR
 from common.log.log_control import LogHandler
 from common.utils.dir_control import mk_dir, ensure_path_sep
-from common.utils.excel_control import ExcelHandle
+from common.utils.excel_control import ExcelHandler
 from common.utils.file_control import create_file
 from common.utils.yaml_control import YamlHandler
 
@@ -14,7 +15,7 @@ class FromExcelWriteYaml():
         # 创建日志对象
         self.log = LogHandler(os.path.basename(__file__))
         # 创建excel对象
-        self.excel_handle = ExcelHandle(TESTDATA_FILE)
+        self.excel_handle = ExcelHandler(TESTDATA_FILE)
 
     # 获取测试文件的sheet名称列表 ['xiaofa', 'Sheet4']
     @property
@@ -28,6 +29,10 @@ class FromExcelWriteYaml():
     def dataHandle_dict(self, data):
         """数据判空处理并转换DICT格式"""
         return json.loads(data) if data else {}
+
+    def dataConvert(self, data):
+        """数据判空处理并使用ast.literal_eval转换格式"""
+        return ast.literal_eval(data) if data else None
 
     def dataHandle_int(self, data):
         """数据判空处理并转换INT格式"""
@@ -207,9 +212,8 @@ class FromExcelWriteYaml():
                             setup_data = {}
                             if setup_execute_sql or setup_execute_request:
                                 # 前置-执行sql处理
-                                if setup_execute_sql := self.dataHandle_dict(setup_execute_sql):
-                                    for v in setup_execute_sql:
-                                        setup_data[v] = setup_execute_sql[v]
+                                if setup_execute_sql := self.dataConvert(setup_execute_sql):
+                                    setup_data['sql'] = setup_execute_sql
                                 # 前置-执行请求处理
                                 if setup_execute_request := self.dataHandle_dict(setup_execute_request):
                                     address = self.judge_is_null(setup_execute_request['request']['url'],
@@ -242,9 +246,8 @@ class FromExcelWriteYaml():
                             teardown_data = {}
                             if teardown_execute_sql or teardown_to_params:
                                 # 后置-执行sql处理
-                                if teardown_execute_sql := self.dataHandle_dict(teardown_execute_sql):
-                                    for v in teardown_execute_sql:
-                                        teardown_data[v] = teardown_execute_sql[v]
+                                if teardown_execute_sql := self.dataConvert(teardown_execute_sql):
+                                    teardown_data['sql'] = teardown_execute_sql
                                 # 后置-需要把响应参数拼接到sql处理
                                 if teardown_to_params := self.dataHandle_dict(teardown_to_params):
                                     teardown_data['is_params'] = teardown_to_params

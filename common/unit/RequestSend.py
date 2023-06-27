@@ -6,7 +6,7 @@ from typing import Dict, Text
 import requests
 import urllib3
 from common.assertion.assert_control import AssertExecution
-from common.db.mysql_control import SqlHandle
+from common.db.mysql_control import SqlHandler
 from common.decorator.allure_decorator import allure_decorator
 from common.decorator.assert_decorator import assert_decorator
 from common.decorator.request_decorator import request_decorator
@@ -27,7 +27,7 @@ class RequestSend:
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         self.log = LogHandler(os.path.basename(__file__))
         self.__yaml_case = TestCase(**yaml_case)
-        self.mysql = SqlHandle()
+        self.mysql = SqlHandler()
 
     def response_elapsed_total_seconds(self, res) -> float:
         """获取接口响应时长"""
@@ -189,7 +189,7 @@ class RequestSend:
         for data in setup_key_list:
             # 前置-sql数据处理
             if 'sql' in data.lower():
-                self.mysql.data_type(setup_data[data])
+                self.mysql.execution_by_sql_type(setup_data[data])
             # 前置-接口数据处理
             if 'request' in data.lower():
                 method = setup_data[data]['method']

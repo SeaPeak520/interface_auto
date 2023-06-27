@@ -4,8 +4,8 @@ import sys
 
 sys.path.append(os.path.dirname(sys.path[0]))
 
-class JsonHandle:
-    def __init__(self,file):
+class JsonHandler:
+    def __init__(self, file):
         self.file = file
         if not os.path.isfile(self.file):
             raise FileNotFoundError(f"{self.file}文件不存在")
@@ -54,8 +54,9 @@ class JsonHandle:
 if __name__ == '__main__':
     # 用法
     from common.config import TESTDATA_DIR
+
     path = f'{TESTDATA_DIR}token.json'
-    jh = JsonHandle(path)
+    jh = JsonHandler(path)
     json_data = jh.get_json_data()
     print(json_data)
     # print(json_data.keys())

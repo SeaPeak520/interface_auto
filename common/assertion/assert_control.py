@@ -1,11 +1,11 @@
 import ast
 import json
 import os
-from typing import Any, Text, Union
+from typing import Any, Text, Union, Optional
 
 import allure
 from common.assertion import assert_type
-from common.db.mysql_control import SqlHandle
+from common.db.mysql_control import SqlHandler
 from common.exceptions.exceptions import AssertTypeError, DataAcquisitionFailed, ValueTypeError
 from common.log.log_control import LogHandler
 from common.utils.file_control import get_value
@@ -13,7 +13,8 @@ from common.utils.models import load_module_functions, AssertMethod
 
 
 class AssertUtil:
-    def __init__(self, assert_data, response_data, status_code, remark, request_data=None):
+    def __init__(self, assert_data, response_data, status_code, remark: str,
+                 request_data: Optional[dict] = None) -> None:
         """
         :param assert_data:  yaml文件中assert的数据
         :param response_data: 请求接口返回的数据
@@ -32,7 +33,7 @@ class AssertUtil:
         """
         :return: {'stata_code': 200 , 'code': {'jsonpath': '$.code', 'type': '==', 'value': 200, 'AssertType': None, 'meassage': '状态码不一致'}}
         """
-        #校验self.assert_data数据不为空
+        # 校验self.assert_data数据不为空
         assert self.assert_data is not None, f"{self.__class__.__name__} 应该包含一个 assert data 属性"
 
         return ast.literal_eval(str(self.assert_data))
@@ -151,7 +152,7 @@ class AssertUtil:
                     raise e
 
             else:
-                #{'jsonpath': '$.code', 'type': '==', 'value': 200, 'AssertType': None, 'meassage': '状态码不一致'}
+                # {'jsonpath': '$.code', 'type': '==', 'value': 200, 'AssertType': None, 'meassage': '状态码不一致'}
                 _assert_data = self.get_assert_data_all.get(i)
                 if self.get_assert_type(_assert_data) == "R_SQL":
                     self._assert(self._assert_request_data(_assert_data), self.get_sql_data,
@@ -165,7 +166,7 @@ class AssertUtil:
                 elif self.get_assert_type(_assert_data) is None:
                     try:
                         self._assert(self.get_type(_assert_data), self._assert_resp_data(_assert_data),
-                                 self.get_value(_assert_data), self.get_message(_assert_data))
+                                     self.get_value(_assert_data), self.get_message(_assert_data))
                     except AssertionError as e:
                         self.log.error(
                             f'{self.remark} 校验错误，信息：[{self._assert_resp_data(_assert_data)},{self.get_value(_assert_data)}] {self.get_message(_assert_data)}')
@@ -179,9 +180,10 @@ class AssertUtil:
                     raise AssertTypeError(f"{self.remark} 断言失败，目前只支持数据库断言和响应断言")
 
 
-class AssertExecution(SqlHandle):
+class AssertExecution(SqlHandler):
     """ 处理断言sql数据 """
-    def assert_execution(self, sql_data: Union[list,Text], sql_assert: Union[list,Text]):
+
+    def assert_execution(self, sql_data: Union[list, Text], sql_assert: Union[list, Text]):
         """
          执行 sql, 负责处理 yaml 文件中的断言需要执行多条 sql 的场景，最终会把所有数据校验后，以布尔类型返回
         :param sql_data: sql
@@ -189,7 +191,7 @@ class AssertExecution(SqlHandle):
         :return:
         """
         try:
-            if isinstance(sql_data,str):
+            if isinstance(sql_data, str):
                 # 判断sql_data和sql_assert是否符合书写规范
                 if not sql_data and not sql_assert:
                     return None
@@ -197,35 +199,35 @@ class AssertExecution(SqlHandle):
                     raise BaseException("校验语句和校验值不匹配，请检查")
 
                 if sql_data:
-                    #判断sql的语法
+                    # 判断sql的语法
                     _sql_type = ['update', 'delete', 'insert', 'select']
                     if all(i not in sql_data for i in _sql_type):
                         raise DataAcquisitionFailed("数据库校验的sql语句语法有问题")
                     # 执行sql获取数量，然后做校验
-                    num = self.data_type(sql_data,state='num')
-                    assert_type.equals(num,int(sql_assert),'数据库校验不通过')
+                    num = self.execution_by_sql_type(sql_data, state='num')
+                    assert_type.equals(num, int(sql_assert), '数据库校验不通过')
                     return True
             elif isinstance(sql_data, list):
-                #判断sql_data和sql_assert是否符合书写规范
+                # 判断sql_data和sql_assert是否符合书写规范
                 if not sql_data and not sql_assert:
                     return None
                 if len(sql_data) != len(sql_assert):
                     raise BaseException("校验语句和校验值不匹配，请检查")
 
-                #对sql_data进行遍历
-                for k,sql in enumerate(sql_data):
-                    #判断sql和校验值是否为空
+                # 对sql_data进行遍历
+                for k, sql in enumerate(sql_data):
+                    # 判断sql和校验值是否为空
                     if (sql and not sql_assert[k]) or (not sql and sql_assert[k]):
                         raise BaseException("校验语句和校验值不匹配，请检查")
 
                     if sql:
-                        #判断sql的语法
+                        # 判断sql的语法
                         _sql_type = ['update', 'delete', 'insert', 'select']
                         if all(i not in sql for i in _sql_type):
                             raise DataAcquisitionFailed("数据库校验的sql语句语法有问题")
-                        #执行sql获取数量，然后做校验
-                        num = self.data_type(sql,state='num')
-                        assert_type.equals(num,int(sql_assert[k]),'数据库校验不通过')
+                        # 执行sql获取数量，然后做校验
+                        num = self.execution_by_sql_type(sql, state='num')
+                        assert_type.equals(num, int(sql_assert[k]), '数据库校验不通过')
                         return True
             else:
                 raise ValueTypeError("sql数据类型不正确，接受的是list或str")
@@ -233,9 +235,10 @@ class AssertExecution(SqlHandle):
             self.log.error(f"数据库连接失败，失败原因: {error_data}")
             raise error_data
 
+
 if __name__ == '__main__':
-    from common.utils.ReadYaml import YamlHandler
-    from common.utils.DirHelper import ensure_path_sep
+    from common.utils.yaml_control import YamlHandler
+    from common.utils.dir_control import ensure_path_sep
 
     yaml_data = YamlHandler(ensure_path_sep('E:\\pythonProject\\new/data/test.yaml')).get_yaml_data()
 

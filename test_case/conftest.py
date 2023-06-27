@@ -11,7 +11,7 @@ import requests
 from common.config import TOKEN_FILE, PRE_DATA_DIR
 from common.log.log_control import LogHandler
 from common.utils.cache_control import CacheHandler
-from common.utils.json_control import JsonHandle
+from common.utils.json_control import JsonHandler
 from common.utils.yaml_control import GetYamlCaseData
 
 
@@ -19,7 +19,7 @@ from common.utils.yaml_control import GetYamlCaseData
 @pytest.fixture(scope='session', autouse=True)
 def set_token():
     #获取token.json的内容
-    token_dic = JsonHandle(TOKEN_FILE).get_json_data()
+    token_dic = JsonHandler(TOKEN_FILE).get_json_data()
     #当前时间
     current_time = datetime.datetime.now().strftime('%Y-%m-%d')
     #获取token时间
@@ -34,7 +34,7 @@ def set_token():
         token_dic['time'] = current_time
         token = f"Bearer {res['data']['token']['token']}"
         token_dic['token'] = token
-        JsonHandle(TOKEN_FILE).set_json_data(token_dic)
+        JsonHandler(TOKEN_FILE).set_json_data(token_dic)
         CacheHandler.update_cache(cache_name='token', value=token)
     else:
         CacheHandler.update_cache(cache_name='token', value=token_dic['token'])

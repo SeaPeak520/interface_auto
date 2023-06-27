@@ -4,9 +4,7 @@ import json
 import os
 from typing import Union, Text, List
 
-from common.config import TOKEN_FILE
 from common.utils.cache_control import CacheHandler
-from common.utils.json_control import JsonHandle
 from common.utils.models import RequestType, Method, TestCaseEnum, TestCase
 from common.utils.yaml_control import GetYamlCaseData
 
@@ -79,7 +77,7 @@ class CaseDataCheck:
     def get_headers(self):
         headers = self.case_data.get(TestCaseEnum.HEADERS.value[0])
         if 'authorization' in headers.keys() and headers['authorization'] is True:
-            headers['authorization'] = JsonHandle(TOKEN_FILE).get_json_data()['token']
+            headers['authorization'] = CacheHandler.get_cache('token')
         return headers
 
     @property

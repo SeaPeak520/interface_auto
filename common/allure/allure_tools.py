@@ -17,7 +17,9 @@ def allure_step(step: str, var: str) -> None:
             step,
             allure.attachment_type.JSON,
         )
-def allure_attach(source: str, name: str, extension: str):
+
+
+def allure_attach(source: str, name: str, extension: str) -> None:
     """
     allure报告上传附件、图片、excel等
     :param source: 文件路径，相当于传一个文件
@@ -37,7 +39,7 @@ def allure_attach(source: str, name: str, extension: str):
     )
 
 
-def allure_step_no(step: str):
+def allure_step_no(step: str) -> None:
     """
     无附件的操作步骤
     :param step: 步骤名称
