@@ -16,8 +16,9 @@ from common.decorator.teardown_decorator import teardown_decorator
 from common.log.log_control import LogHandler
 from common.unit import case_skip
 from common.unit.dependent_case import DependentCase
+from common.unit.setup_control import setup_handler
 from common.utils.models import TestCase, RequestType, ResponseData
-from common.utils.regular_control import yamlcase_regular, cache_regular
+from common.utils.regular_control import yamlcase_regular
 
 sys.path.append(os.path.dirname(sys.path[0]))
 
@@ -165,38 +166,6 @@ class RequestSend:
         # 抽离出通用模块，判断 http_request 方法中的一些数据校验
         return ResponseData(**_data)
 
-    def request_type(self, headers=None):
-        """通过headers判断请求类型(前置请求时使用)"""
-        if headers is None or 'Content-Type' not in headers.keys():
-            # return None
-            return 'params'
-        if 'application/json' in headers['Content-Type']:
-            return 'json'
-        elif 'application/form-data' in headers['Content-Type']:
-            return 'params'
-        elif 'application/x-www-form-urlencoded' in headers['Content-Type']:
-            return 'data'
-        else:
-            return None
-
-    def setup_handler(self, requests_type_mapping):
-        """前置条件的数据处理"""
-        # 如果process参数所有key不包含‘setup’，返回 None（全部为Ture才执行）
-        if all('setup' not in i for i in self.__yaml_case.process.keys()):
-            return None
-        setup_data = self.__yaml_case.process['setup']
-        setup_key_list = list(setup_data.keys())
-        for data in setup_key_list:
-            # 前置-sql数据处理
-            if 'sql' in data.lower():
-                self.mysql.execution_by_sql_type(setup_data[data])
-            # 前置-接口数据处理
-            if 'request' in data.lower():
-                method = setup_data[data]['method']
-                headers = ast.literal_eval(cache_regular(str(setup_data[data]['headers'])))
-                request_type = self.request_type(headers)
-                requests_type_mapping.get(request_type.upper())(headers, method, is_setup=True)
-
     @teardown_decorator  # 后置条件装饰器
     @assert_decorator  # 断言装饰器
     @allure_decorator  # allure步骤装饰器
@@ -216,7 +185,7 @@ class RequestSend:
         if self.__yaml_case.is_run is True or self.__yaml_case.is_run is None:
             # 非依赖要执行的接口时 执行前置条件
             if not dependence:
-                self.setup_handler(requests_type_mapping)
+                setup_handler(self.__yaml_case)
             # 如果有依赖数据统一在那边做处理，否则直接处理缓存
             if dependent_switch is True:
                 # 把self.__yaml_case传到DependentCase类处理，返回正则匹配到的数据

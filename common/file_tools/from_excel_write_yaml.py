@@ -215,28 +215,7 @@ class FromExcelWriteYaml():
                                 if setup_execute_sql := self.dataConvert(setup_execute_sql):
                                     setup_data['sql'] = setup_execute_sql
                                 # 前置-执行请求处理
-                                if setup_execute_request := self.dataHandle_dict(setup_execute_request):
-                                    address = self.judge_is_null(setup_execute_request['request']['url'],
-                                                                 message=f"{function_data_value['功能']}的前置条件url")
-                                    host = self.dataHandle_host(address)
-                                    url = self.dataHandle_url(address)
-                                    method = self.judge_is_null(setup_execute_request['request']['method'],
-                                                                message=f"{function_data_value['功能']}的前置条件method")
-                                    headers = self.judge_is_null(setup_execute_request['request']['headers'],
-                                                                 message=f"{function_data_value['功能']}的前置条件headers")
-                                    request_type = self.request_type_handler(headers)
-                                    request_data = self.judge_is_null(setup_execute_request['request']['params'],
-                                                                      is_null=True)
-
-                                    request_data = {
-                                        "host": host,
-                                        "url": url,
-                                        "method": method,
-                                        "headers": headers,
-                                        "requestType": request_type,
-                                        "requestData": request_data
-                                    }
-
+                                if request_data := self.dataConvert(setup_execute_request):
                                     setup_data['request'] = request_data
 
                             if setup_data:

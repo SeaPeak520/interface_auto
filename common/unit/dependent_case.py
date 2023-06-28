@@ -38,6 +38,24 @@ class DependentCase:
         except KeyError:
             return None
 
+    def response_by_case_id(self, _case_id, _replace_key):
+        from common.unit.RequestSend import RequestSend
+        # 判断依赖数据类型，
+        re_data = config_regular(str(self.get_cache(_case_id)))
+        # 把str类型转成字典
+        _re_data = ast.literal_eval(re_data)
+
+        # 替换依赖接口的请求参数值
+        if _replace_key:
+            for r, k in _replace_key.items():
+                _re_data['requestData'][r] = k
+        # 执行请求
+        res = RequestSend(_re_data).http_request(dependence=True).res_data
+        # 转换类型
+        res = json.loads(res)
+
+        return res
+
     @classmethod
     def replace_key(cls, dependent_data: "DependentData"):
         """ 获取需要替换的内容 """
@@ -93,28 +111,15 @@ class DependentCase:
                     else:
                         if dependent_data is not None:
                             for i in dependent_data:
-                                from common.unit.RequestSend import RequestSend
                                 if i.dependent_type in (DependentType.RESPONSE.value, DependentType.SQL_DATA.value):
                                     # 获取dependent_data中set_cache的值
                                     _set_cache = self.set_cache_value(i)
                                     # 获取dependent_data中set_cache的值  list
                                     _replace_key = self.replace_key(i)
 
-                                    # 判断依赖数据类型，
-                                    re_data = config_regular(str(self.get_cache(_case_id)))
-                                    # 把str类型转成字典
-                                    re_data = ast.literal_eval(re_data)
-
-                                    # 替换依赖接口的请求参数值
-                                    if _replace_key:
-                                        for r, k in _replace_key.items():
-                                            re_data['requestData'][r] = k
-                                    # 执行请求
-                                    res = RequestSend(re_data).http_request(dependence=True).res_data
-                                    # 转换类型
-                                    res = json.loads(res)
                                     # response
                                     if i.dependent_type == DependentType.RESPONSE.value:
+                                        res = self.response_by_case_id(_case_id, _replace_key)
                                         _set_value = get_value(res, i.jsonpath)[0]
                                         CacheHandler.update_cache(cache_name=_set_cache, value=_set_value)
                                     # sqlData
