@@ -76,9 +76,8 @@ class DependentCase:
         # 获取依赖用例数据
         _dependence_case_dates = self.__yaml_case.dependence_case_data
 
-        # _setup_sql = self.__yaml_case.setup_sql
         # 判断是否有依赖
-        if _dependent_type is True:
+        if _dependent_type is True or _dependent_type == 'True':
             # 循环所有需要依赖的数据
             try:
                 for dependence_case_data in _dependence_case_dates:
@@ -110,7 +109,6 @@ class DependentCase:
                                     if _replace_key:
                                         for r, k in _replace_key.items():
                                             re_data['requestData'][r] = k
-
                                     # 执行请求
                                     res = RequestSend(re_data).http_request(dependence=True).res_data
                                     # 转换类型
@@ -141,7 +139,6 @@ class DependentCase:
 
     def get_dependent_data(self) -> "TestCase":
         """
-        jsonpath 和 依赖的数据,进行替换
         :return:
         """
         self.is_dependent()

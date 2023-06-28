@@ -13,6 +13,7 @@ def load_module_functions(module):
         if isinstance(item, types.FunctionType)
     }
 
+
 @unique
 class AssertMethod(Enum):
     """断言类型"""
@@ -66,6 +67,7 @@ class Method(Enum):
     DELETE = "DELETE"
     HEAD = "HEAD"
     OPTION = "OPTION"
+
 
 class RequestType(Enum):
     """
@@ -122,6 +124,7 @@ class TestCase(BaseModel):
     # sleep: Optional[Union[int, float]]
     process: Union[Dict, Text]
 
+
 class Config(BaseModel):
     info: Dict
     mysql: Dict
@@ -138,6 +141,7 @@ class Config(BaseModel):
     # lark: "Webhook"
     # real_time_update_test_cases: bool = False
     # host: Text
+
 
 class ResponseData(BaseModel):
     yaml_is_run: Union[None, bool, Text]
@@ -170,6 +174,7 @@ class SetupTeardown_Type(Enum):
     DELETE = "DELETE"
     SELETE = "SELETE"
     NUM = 'NUM'
+
 
 @unique
 class AllureAttachmentType(Enum):

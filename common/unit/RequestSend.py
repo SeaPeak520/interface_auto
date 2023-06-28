@@ -193,9 +193,8 @@ class RequestSend:
             # 前置-接口数据处理
             if 'request' in data.lower():
                 method = setup_data[data]['method']
-                headers = setup_data[data]['headers']
+                headers = ast.literal_eval(cache_regular(str(setup_data[data]['headers'])))
                 request_type = self.request_type(headers)
-                headers = ast.literal_eval(cache_regular(str(headers)))
                 requests_type_mapping.get(request_type.upper())(headers, method, is_setup=True)
 
     @teardown_decorator  # 后置条件装饰器
@@ -227,7 +226,6 @@ class RequestSend:
                 self.__yaml_case = yamlcase_regular(self.__yaml_case)
             # requests_type_mapping.get(self._yaml_case.requestType) 执行的函数，比如JSON，执行request_type_for_json的函数
             # 判断依赖数据，不执行装饰器
-
             res = requests_type_mapping.get(self.__yaml_case.requestType)(
                 headers=self.__yaml_case.headers,
                 method=self.__yaml_case.method,
