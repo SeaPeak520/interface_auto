@@ -148,7 +148,7 @@ class FromExcelWriteYaml():
                             is_run = self.dataHandler_is_run(function_data_value['是否运行'])
                             headers = self.dataHandle_dict(self.judge_is_null(function_data_value['请求头'],
                                                                               message=f"{function_data_value['功能']}的请求头"))
-                            dependence = self.judge_is_null(function_data_value['依赖数据'], is_null=True)
+                            dependence = self.judge_is_null(function_data_value['关联用例数据'], is_null=True)
                             request_type = self.request_type_handler(headers)
                             request_data = self.dataHandle_dict(
                                 self.judge_is_null(function_data_value['请求参数'], is_null=True))
@@ -164,16 +164,18 @@ class FromExcelWriteYaml():
                                 "requestData": request_data,
                                 "dependence_case": None,
                                 "dependence_case_data": None,
+                                "setup_sql": None,
                                 "sql_data": None,
                                 "sql_assert": None,
                                 "assert_data": None,
-                                "process": {}
+                                "teardown": None
                             }
-                            # 依赖数据处理
+                            # 关联数据处理
                             if dependence:
                                 info_case['dependence_case'] = True
                                 info_case['dependence_case_data'] = self.dataHandle_dict(dependence)
 
+                            # 数据库校验处理
                             # 缺少不会入库 != ''兼容0的值
                             if function_data_value['数据库校验语句'] and function_data_value['数据库校验结果'] != '':
                                 info_case['sql_data'] = function_data_value['数据库校验语句']
@@ -202,26 +204,16 @@ class FromExcelWriteYaml():
                             if assert_data:
                                 info_case['assert_data'] = assert_data
 
-                            #######3、前后置数据
+                            #######3、前置数据处理
                             setup_execute_sql = function_data_value['前置条件(要执行的sql)']
-                            setup_execute_request = function_data_value['前置条件(要执行的接口请求)']
+                            if setup_execute_sql:
+                                if setup_execute_sql := self.dataConvert(setup_execute_sql):
+                                    info_case['setup_sql'] = setup_execute_sql
+
+                            #######4、后置数据处理
                             teardown_execute_sql = function_data_value['后置条件(要执行的sql)']
                             teardown_to_params = function_data_value['后置条件(需要把响应参数拼接到sql)']
 
-                            # 前置
-                            setup_data = {}
-                            if setup_execute_sql or setup_execute_request:
-                                # 前置-执行sql处理
-                                if setup_execute_sql := self.dataConvert(setup_execute_sql):
-                                    setup_data['sql'] = setup_execute_sql
-                                # 前置-执行请求处理
-                                if request_data := self.dataConvert(setup_execute_request):
-                                    setup_data['request'] = request_data
-
-                            if setup_data:
-                                info_case['process']['setup'] = setup_data
-
-                            # 后置
                             teardown_data = {}
                             if teardown_execute_sql or teardown_to_params:
                                 # 后置-执行sql处理
@@ -232,7 +224,7 @@ class FromExcelWriteYaml():
                                     teardown_data['is_params'] = teardown_to_params
 
                             if teardown_data:
-                                info_case['process']['teardown'] = teardown_data
+                                info_case['teardown'] = teardown_data
 
                             # 把info信息写入case中
                             case_data[function_data_value['用例名称'].split('test_')[-1]] = info_case

@@ -48,15 +48,12 @@ class TestCaseEnum(Enum):
     DE_CASE_DATA = ("dependence_case_data", False)
     SQL_DATA = ("sql_data", True)
     SQL_ASSERT = ("sql_assert", True)
-
     CURRENT_RE_SET_CACHE = ("current_request_set_cache", False)
-    SQL = ("sql", False)
-    ASSERT_DATA = ("assert_data", True)
     SETUP_SQL = ("setup_sql", False)
+    ASSERT_DATA = ("assert_data", True)
     TEARDOWN = ("teardown", False)
     TEARDOWN_SQL = ("teardown_sql", False)
     SLEEP = ("sleep", False)
-    PROCESS = ("process", True)
 
 
 class Method(Enum):
@@ -94,9 +91,9 @@ class DependentType(Enum):
 
 class DependentData(BaseModel):
     dependent_type: Text
-    dependent_sql: Union[Text, None]
-    jsonpath: Union[Text, None]
-    set_cache: Union[Text, None]
+    dependent_sql: Union[Text, None, list]
+    jsonpath: Union[Text, None, list]
+    set_cache: Union[Text, None, list]
     replace_key: Union[Dict, None]
 
 
@@ -115,14 +112,15 @@ class TestCase(BaseModel):
     headers: Union[None, Dict, Text]
     requestType: Text
     requestData: Union[Dict, Text, List, None]
-    dependence_case: Union[None, Dict, Text] = False
+    dependence_case: Union[None, Text] = False
     dependence_case_data: Optional[Union[None, List["DependentCaseData"], Text]] = None
+    setup_sql: Union[None, List, Text]
     sql_data: Union[list, Text, None]
     sql_assert: Union[list, Text, None]
-    assert_data: Union[Dict, Text]
+    assert_data: Union[Dict, Text, None]
     # current_request_set_cache: Optional[List["CurrentRequestSetCache"]]
     # sleep: Optional[Union[int, float]]
-    process: Union[Dict, Text]
+    teardown: Union[Dict, Text, None]
 
 
 class Config(BaseModel):

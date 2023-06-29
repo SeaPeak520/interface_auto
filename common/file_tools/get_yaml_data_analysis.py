@@ -139,12 +139,13 @@ class CaseData(CaseDataCheck):
                     'requestData': self.case_data.get(TestCaseEnum.REQUEST_DATA.value[0]),
                     'dependence_case': self.case_data.get(TestCaseEnum.DE_CASE.value[0]),
                     'dependence_case_data': self.get_dependence_case_data,
+                    'setup_sql': self.case_data.get(TestCaseEnum.SETUP_SQL.value[0]),
                     # "current_request_set_cache": self.case_data.get(TestCaseEnum.CURRENT_RE_SET_CACHE.value[0]),
                     "sql_data": self.get_sql_data,
                     "sql_assert": self.get_sql_assert,
                     "assert_data": self.get_assert,
                     # "sleep": self.case_data.get(TestCaseEnum.SLEEP.value[0]),
-                    "process": self.case_data.get(TestCaseEnum.PROCESS.value[0])
+                    "teardown": self.case_data.get(TestCaseEnum.TEARDOWN.value[0])
                 }
                 if case_id_switch is True:
                     case_list.append({key: TestCase(**case_data).dict()})

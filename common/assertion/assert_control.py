@@ -4,6 +4,7 @@ import os
 from typing import Any, Text, Union, Optional
 
 import allure
+
 from common.assertion import assert_type
 from common.db.mysql_control import SqlHandler
 from common.exceptions.exceptions import AssertTypeError, DataAcquisitionFailed, ValueTypeError
@@ -196,7 +197,7 @@ class AssertExecution(SqlHandler):
                 if not sql_data and not sql_assert:
                     return None
                 if (sql_data and not sql_assert) or (not sql_data and sql_assert):
-                    raise BaseException("校验语句和校验值不匹配，请检查")
+                    raise ValueError("校验语句和校验值不匹配，请检查")
 
                 if sql_data:
                     # 判断sql的语法
@@ -205,20 +206,21 @@ class AssertExecution(SqlHandler):
                         raise DataAcquisitionFailed("数据库校验的sql语句语法有问题")
                     # 执行sql获取数量，然后做校验
                     num = self.execution_by_sql_type(sql_data, state='num')
-                    assert_type.equals(num, int(sql_assert), '数据库校验不通过')
+                    assert_type.equals(num, int(sql_assert),
+                                       f'执行结果：{num}, 预期结果：{int(sql_assert)}，数据库校验不通过')
                     return True
             elif isinstance(sql_data, list):
                 # 判断sql_data和sql_assert是否符合书写规范
                 if not sql_data and not sql_assert:
                     return None
                 if len(sql_data) != len(sql_assert):
-                    raise BaseException("校验语句和校验值不匹配，请检查")
+                    raise ValueError("校验语句和校验值不匹配，请检查")
 
                 # 对sql_data进行遍历
                 for k, sql in enumerate(sql_data):
                     # 判断sql和校验值是否为空
                     if (sql and not sql_assert[k]) or (not sql and sql_assert[k]):
-                        raise BaseException("校验语句和校验值不匹配，请检查")
+                        raise ValueError("校验语句和校验值不匹配，请检查")
 
                     if sql:
                         # 判断sql的语法
@@ -232,7 +234,7 @@ class AssertExecution(SqlHandler):
             else:
                 raise ValueTypeError("sql数据类型不正确，接受的是list或str")
         except Exception as error_data:
-            self.log.error(f"数据库连接失败，失败原因: {error_data}")
+            self.log.error(f"失败原因: {error_data}")
             raise error_data
 
 

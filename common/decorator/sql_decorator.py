@@ -15,6 +15,7 @@ def sql_assert(func):
             log = LogHandler(os.path.basename(__file__))
 
             _sql_result = None
+            # 如果请求结果的code等于校验数据的code校验
             if json.loads(res.res_data)['code'] == res.yaml_assert_data['code']['value']:
                 """处理 sql 参数 ：数据库校验"""
                 from common.utils import config

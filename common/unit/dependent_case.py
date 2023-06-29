@@ -3,7 +3,7 @@ import json
 import os
 from typing import Text, Dict, Union
 
-from common.exceptions.exceptions import ValueNotFoundError
+from common.exceptions.exceptions import ValueNotFoundError, ValueTypeError
 from common.log.log_control import LogHandler
 from common.utils.cache_control import CacheHandler
 from common.utils.file_control import get_value
@@ -38,7 +38,8 @@ class DependentCase:
         except KeyError:
             return None
 
-    def response_by_case_id(self, _case_id, _replace_key):
+    def response_by_case_id(self, _case_id, _replace_key) -> dict:
+        """通过 case_id 获取用例，然后用_replace_key替换请求参数，最后进行接口请求并返回"""
         from common.unit.RequestSend import RequestSend
         # 判断依赖数据类型，
         re_data = config_regular(str(self.get_cache(_case_id)))
@@ -48,7 +49,16 @@ class DependentCase:
         # 替换依赖接口的请求参数值
         if _replace_key:
             for r, k in _replace_key.items():
-                _re_data['requestData'][r] = k
+                r_list = r.split('_')
+                r_len = len(r_list)
+                if r_len == 1:
+                    _re_data['requestData'][r_list[r_len - 1]] = k
+                elif r_len == 2:
+                    _re_data['requestData'][r_list[r_len - 2]][r_list[r_len - 1]] = k
+                elif r_len == 3:
+                    _re_data['requestData'][r_list[r_len - 3]][r_list[r_len - 2]][r_list[r_len - 1]] = k
+                else:
+                    raise ValueError(f"{_replace_key} 格式不规范，请检查！")
         # 执行请求
         res = RequestSend(_re_data).http_request(dependence=True).res_data
         # 转换类型
@@ -57,13 +67,29 @@ class DependentCase:
         return res
 
     @classmethod
-    def replace_key(cls, dependent_data: "DependentData"):
+    def replace_key(cls, dependent_data: "DependentData") -> dict:
         """ 获取需要替换的内容 """
         try:
             _replace_key = dependent_data.replace_key
             return _replace_key
         except KeyError:
             return None
+
+    def cache_by_sql(self, _dependent_sql, _set_cache):
+        """
+        执行_dependent_sql，设置缓存，key为_set_cache，value为sql执行结果
+        :param _dependent_sql:
+        :param _set_cache:
+        :return:
+        """
+        from common.db.mysql_control import MysqlDB
+        m = MysqlDB()
+        if sql_data := m.select(_dependent_sql, state='one'):
+            sql_data = sql_data[0]
+        else:
+            sql_data = None
+        if _set_cache is not None:
+            CacheHandler.update_cache(cache_name=_set_cache, value=sql_data)
 
     def _dependent_type_for_sql(
             self,
@@ -76,12 +102,17 @@ class DependentCase:
         @return:
         """
         # 判断依赖数据类型，依赖 sql中的数据
-        from common.db.mysql_control import MysqlDB
-        m = MysqlDB()
-        sql_data = m.select(dependent_data.dependent_sql, state='one')[0]
-        _set_cache = self.set_cache_value(dependent_data)
-        if _set_cache is not None:
-            CacheHandler.update_cache(cache_name=_set_cache, value=sql_data)
+        _dependent_sql = dependent_data.dependent_sql  # list or str or None
+        _set_cache = self.set_cache_value(dependent_data)  # list or str or None
+        if not _dependent_sql:
+            raise ValueError(f"关联sql数据为空，请检查！")
+        if isinstance(_dependent_sql, list) and isinstance(_set_cache, list) and len(_set_cache) == len(_dependent_sql):
+            for k, v in enumerate(_dependent_sql):
+                self.cache_by_sql(v, _set_cache[k])
+        elif isinstance(_dependent_sql, str) and isinstance(_set_cache, str):
+            self.cache_by_sql(_dependent_sql, _set_cache)
+        else:
+            raise ValueTypeError(f"传入数据类型不正确，接受的是list或str: {_dependent_sql}, {_set_cache}")
 
     def is_dependent(self) -> None:
         """
@@ -111,21 +142,38 @@ class DependentCase:
                     else:
                         if dependent_data is not None:
                             for i in dependent_data:
-                                if i.dependent_type in (DependentType.RESPONSE.value, DependentType.SQL_DATA.value):
+                                if i.dependent_type == DependentType.RESPONSE.value:
                                     # 获取dependent_data中set_cache的值
                                     _set_cache = self.set_cache_value(i)
                                     # 获取dependent_data中set_cache的值  list
                                     _replace_key = self.replace_key(i)
 
-                                    # response
-                                    if i.dependent_type == DependentType.RESPONSE.value:
-                                        res = self.response_by_case_id(_case_id, _replace_key)
-                                        _set_value = get_value(res, i.jsonpath)[0]
+                                    _jsonpath = i.jsonpath
+
+                                    res = self.response_by_case_id(_case_id, _replace_key)
+
+                                    if isinstance(_set_cache, list) and isinstance(_jsonpath, list) and len(
+                                            _set_cache) == len(_jsonpath):
+                                        for k, v in enumerate(_set_cache):
+                                            # 从res通过jsonpath获取结果
+                                            _set_value = get_value(res, _jsonpath[k])[0]
+                                            CacheHandler.update_cache(cache_name=v, value=_set_value)
+                                    elif isinstance(_set_cache, str) and isinstance(_jsonpath, str):
+                                        _set_value = get_value(res, _jsonpath)[0]
                                         CacheHandler.update_cache(cache_name=_set_cache, value=_set_value)
-                                    # sqlData
                                     else:
-                                        self._dependent_type_for_sql(
-                                            dependent_data=i)
+                                        raise ValueTypeError(
+                                            f"传入数据类型不正确，接受的是list或str: _jsonpath: {_set_cache}, _jsonpath: {_jsonpath}")
+                                # sqlData
+                                elif i.dependent_type == DependentType.SQL_DATA.value:
+                                    _replace_key = self.replace_key(i)
+                                    self.response_by_case_id(_case_id, _replace_key)
+                                    self._dependent_type_for_sql(
+                                        dependent_data=i)
+                                # request 只请求
+                                elif i.dependent_type == DependentType.REQUEST.value:
+                                    _replace_key = self.replace_key(i)
+                                    self.response_by_case_id(_case_id, _replace_key)
                                 else:
                                     raise ValueError(
                                         "依赖的dependent_type不正确，只支持request、response、sql依赖\n"

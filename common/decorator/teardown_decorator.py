@@ -19,9 +19,8 @@ def teardown_decorator(func):
                 yaml_code = res_yaml_assert_data['code']['value']
                 # 判断接口不符合预期，不执行后置条件
                 if res_code == yaml_code:
-                    if any('teardown' in i for i in res.yaml_data.process.keys()):
-
-                        teardown_data = res.yaml_data.process['teardown']
+                    # 判断后置条件是否为空
+                    if teardown_data := res.yaml_data.teardown:
                         teardown_key_list = list(teardown_data.keys())
                         m = SqlHandler()
 

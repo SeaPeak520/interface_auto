@@ -5,6 +5,7 @@ from typing import Dict, Text
 
 import requests
 import urllib3
+
 from common.assertion.assert_control import AssertExecution
 from common.db.mysql_control import SqlHandler
 from common.decorator.allure_decorator import allure_decorator
@@ -169,9 +170,9 @@ class RequestSend:
     @teardown_decorator  # 后置条件装饰器
     @assert_decorator  # 断言装饰器
     @allure_decorator  # allure步骤装饰器
+    @request_decorator(switch=True)  # 接口请求装饰器（打印请求信息日志）
     @sql_assert  # 数据库校验装饰器  返回res_sql_result
     @execution_duration(3000)  # 封装统计函数执行时间装饰器
-    @request_decorator(switch=True)  # 接口请求装饰器（打印请求信息日志）
     def http_request(self, dependent_switch=True, dependence=False, **kwargs):
         requests_type_mapping = {
             RequestType.JSON.value: self.request_type_for_json,
