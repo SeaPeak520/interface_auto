@@ -3,6 +3,7 @@ import os
 import sys
 
 import yaml
+
 from common.utils.dir_control import ensure_path_sep
 from common.utils.regular_control import config_regular
 
@@ -24,33 +25,35 @@ class YamlHandler:
         with open(self.file, 'r', encoding='utf-8') as f:
             return yaml.load(f, Loader=yaml.FullLoader)
 
-    def update_dict(self,key,value):
+    def update_dict(self, key, value):
         """更新yaml文件中的数据，采用key_value方式
         ("case_common:allureEpic", 'v1222')
         :param key: "case_common:allureEpic"
         :param value: 'v1222'
         :return:
         """
-        #读取yaml文件，返回字典数据
+        # 读取yaml文件，返回字典数据
         with open(self.file, 'r') as file:
             data = yaml.load(file, Loader=yaml.FullLoader)
 
-        #更新字典值
+        # 更新字典值
         key_list = key.split(':')
         key_len = len(key_list)
 
-        if key_len ==1:
+        if key_len == 1:
             data[key_list[0]] = value
-        if key_len == 2:
+        elif key_len == 2:
             data[key_list[0]][key_list[1]] = value
-        if key_len == 3:
+        elif key_len == 3:
             data[key_list[0]][key_list[1]][key_list[2]] = value
-        if key_len == 4:
+        elif key_len == 4:
             data[key_list[0]][key_list[1]][key_list[2]][key_list[3]] = value
+        else:
+            raise ValueError(f"暂不支持格式，应为'a_b_c_d'之内：{key}")
 
         # # 将字典数据转换回YAML格式并写入文件
         with open(self.file, 'w') as file:
-            yaml.safe_dump(data,file, default_flow_style=False, sort_keys=False, encoding='utf-8', allow_unicode=True)
+            yaml.safe_dump(data, file, default_flow_style=False, sort_keys=False, encoding='utf-8', allow_unicode=True)
 
     def write_yaml_data(self, key: str, value) -> int:
         """
@@ -66,7 +69,7 @@ class YamlHandler:
         with open(self.file, 'w', encoding='utf-8') as file:
             flag = 0
             for line in lines:
-                #allureEpic
+                # allureEpic
                 left_str = line.split(":")[0]
                 if key == left_str.lstrip() and '#' not in line:
                     newline = f"{left_str}: {value}"
@@ -77,19 +80,22 @@ class YamlHandler:
             file.close()
             return flag
 
-    def DictWriteYaml(self,dict_data):
+    def DictWriteYaml(self, dict_data):
         # 不添加则会写入null，作用：把None不写入值
         def represent_none(self, _):
             return self.represent_scalar('tag:yaml.org,2002:null', '')
 
         yaml.add_representer(type(None), represent_none, Dumper=yaml.SafeDumper)
         """把dict数据全量写入到yaml文件中"""
-        with open(self.file,'w+',encoding='utf-8') as f:
-            yaml.safe_dump(dict_data,f, default_flow_style=False, sort_keys=False, encoding='utf-8', allow_unicode=True)
+        with open(self.file, 'w+', encoding='utf-8') as f:
+            yaml.safe_dump(dict_data, f, default_flow_style=False, sort_keys=False, encoding='utf-8',
+                           allow_unicode=True)
 
-#获取单个yaml文件的测试数据
+
+# 获取单个yaml文件的测试数据
 class GetYamlCaseData(YamlHandler):
     """ 获取测试用例中的数据 """
+
     def get_yaml_case_data(self):
         """
         获取正则处理过的测试用例数据
@@ -101,12 +107,12 @@ class GetYamlCaseData(YamlHandler):
         return ast.literal_eval(re_data)
 
 
-#获取某个目录下的所有yaml文件的路径
+# 获取某个目录下的所有yaml文件的路径
 def get_all_caseyaml(file_path):
     yamlfile_path = []
-    #过滤掉在file_path中文件或目录
-    target_list = ['pre', 'test.yaml', 'test_bbak.yaml', 'token.json']  
-    for name in os.listdir(file_path):  #['Collect', 'pre', 'test1.yaml', 'test_bbak.yaml', 'token.json', 'UserInfo']
+    # 过滤掉在file_path中文件或目录
+    target_list = ['pre', 'test.yaml', 'test_bbak.yaml', 'token.json']
+    for name in os.listdir(file_path):  # ['Collect', 'pre', 'test1.yaml', 'test_bbak.yaml', 'token.json', 'UserInfo']
         if name not in target_list:
             if name.endswith('.yaml'):
                 yamlfile_path.append(os.path.join(file_path, name))
@@ -126,5 +132,3 @@ if __name__ == '__main__':
 
     a = GetYamlCaseData(path).get_yaml_case_data()
     print(a)
-
-

@@ -182,6 +182,24 @@ class AssertUtil:
 
 
 class AssertExecution(SqlHandler):
+
+    def _extracted_from_assert_execution(self, sql_data, sql_assert):
+        # 判断sql_data和sql_assert是否符合书写规范
+        if not sql_data and not sql_assert:
+            return None
+        if sql_data and not sql_assert or not sql_data:
+            raise ValueError("校验语句和校验值不匹配，请检查")
+
+        # 判断sql的语法
+        _sql_type = ['update', 'delete', 'insert', 'select']
+        if all(i not in sql_data for i in _sql_type):
+            raise DataAcquisitionFailed("数据库校验的sql语句语法有问题")
+        # 执行sql获取数量，然后做校验
+        num = self.execution_by_sql_type(sql_data, state='num')
+        assert_type.equals(num, int(sql_assert),
+                           f'执行结果：{num}, 预期结果：{int(sql_assert)}，数据库校验不通过')
+        return True
+
     """ 处理断言sql数据 """
 
     def assert_execution(self, sql_data: Union[list, Text], sql_assert: Union[list, Text]):
@@ -193,22 +211,7 @@ class AssertExecution(SqlHandler):
         """
         try:
             if isinstance(sql_data, str):
-                # 判断sql_data和sql_assert是否符合书写规范
-                if not sql_data and not sql_assert:
-                    return None
-                if (sql_data and not sql_assert) or (not sql_data and sql_assert):
-                    raise ValueError("校验语句和校验值不匹配，请检查")
-
-                if sql_data:
-                    # 判断sql的语法
-                    _sql_type = ['update', 'delete', 'insert', 'select']
-                    if all(i not in sql_data for i in _sql_type):
-                        raise DataAcquisitionFailed("数据库校验的sql语句语法有问题")
-                    # 执行sql获取数量，然后做校验
-                    num = self.execution_by_sql_type(sql_data, state='num')
-                    assert_type.equals(num, int(sql_assert),
-                                       f'执行结果：{num}, 预期结果：{int(sql_assert)}，数据库校验不通过')
-                    return True
+                return self._extracted_from_assert_execution(sql_data, sql_assert)
             elif isinstance(sql_data, list):
                 # 判断sql_data和sql_assert是否符合书写规范
                 if not sql_data and not sql_assert:

@@ -205,8 +205,7 @@ class FromExcelWriteYaml():
                                 info_case['assert_data'] = assert_data
 
                             #######3、前置数据处理
-                            setup_execute_sql = function_data_value['前置条件(要执行的sql)']
-                            if setup_execute_sql:
+                            if setup_execute_sql := function_data_value['前置条件(要执行的sql)']:
                                 if setup_execute_sql := self.dataConvert(setup_execute_sql):
                                     info_case['setup_sql'] = setup_execute_sql
 

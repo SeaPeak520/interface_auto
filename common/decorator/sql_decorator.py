@@ -33,7 +33,7 @@ def sql_assert(func):
                     if sql_data and sql_expect_result is not None:
                         _sql_result = AssertExecution().assert_execution(sql_data, sql_expect_result)
                 else:
-                    log.info(f"数据库校验已关闭，用例不进行数据库校验")
+                    log.info("数据库校验已关闭，用例不进行数据库校验")
             res.res_sql_result = _sql_result
         return res
 

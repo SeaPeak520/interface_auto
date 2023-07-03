@@ -153,8 +153,7 @@ def cache_regular(target: str) -> str:
 def yamlcase_regular(yaml_case: str) -> "TestCase":
     _regular_data = cache_regular(f"{yaml_case.dict()}")
     _regular_data = ast.literal_eval(_regular_data)
-    _new_data = TestCase(**_regular_data)
-    return _new_data
+    return TestCase(**_regular_data)
 
 
 if __name__ == '__main__':

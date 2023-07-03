@@ -62,8 +62,8 @@ class CaseDataCheck:
 
     @property
     def get_method(self) -> Text:
-        #TestCaseEnum.METHOD.value[0]  method
-        #self.case_data.get(TestCaseEnum.METHOD.value[0])) post
+        # TestCaseEnum.METHOD.value[0]  method
+        # self.case_data.get(TestCaseEnum.METHOD.value[0])) post
         return self.check_params_right(
             Method,
             self.case_data.get(TestCaseEnum.METHOD.value[0])
@@ -101,8 +101,7 @@ class CaseDataCheck:
 
     @property
     def get_dependence_case_data(self):
-        _dep_data = self.case_data.get(TestCaseEnum.DE_CASE.value[0])
-        if _dep_data:
+        if _dep_data := self.case_data.get(TestCaseEnum.DE_CASE.value[0]):
             assert self.case_data.get(TestCaseEnum.DE_CASE_DATA.value[0]) is not None, (
                 f"程序中检测到您的 case_id 为 {self.case_id} 的用例存在依赖，但是 {_dep_data} 缺少依赖数据."
                 f"如已填写，请检查缩进是否正确， 用例路径: {self.file_path}"
@@ -117,8 +116,10 @@ class CaseDataCheck:
         )
         return _assert_data
 
+
 class CaseData(CaseDataCheck):
     """获取yaml文件的用例数据"""
+
     def case_process(self, case_id_switch: Union[None, bool] = None):
         data = GetYamlCaseData(self.file_path).get_yaml_case_data()
         case_list = []
@@ -127,7 +128,7 @@ class CaseData(CaseDataCheck):
             if key != 'case_common':
                 self.case_data = values
                 self.case_id = key
-                #检查model参数是否在测试用例中
+                # 检查model参数是否在测试用例中
                 super().check_params_exit()
                 case_data = {
                     'method': self.get_method,
@@ -153,16 +154,19 @@ class CaseData(CaseDataCheck):
                     case_list.append(TestCase(**case_data).dict())
         return case_list
 
+
 class GetTestCase:
     """用例执行时获取Cache数据，初始化执行的test_case目录的__init__.py"""
+
     @staticmethod
     def case_data(case_id_lists: List):
-        #用例数据集合
+        # 用例数据集合
         case_lists = []
         for i in case_id_lists:
             _data = CacheHandler.get_cache(i)
             case_lists.append(_data)
         return case_lists
+
 
 if __name__ == '__main__':
     from common.config import TESTDATA_DIR

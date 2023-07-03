@@ -127,7 +127,7 @@ class RequestSend:
             if sql_data and sql_assert is not None:
                 return AssertExecution().assert_execution(sql_data, sql_assert)
         else:
-            self.log.info(f"数据库校验已关闭，用例不进行数据库校验")
+            self.log.info("数据库校验已关闭，用例不进行数据库校验")
 
     def _check_params(
             self,
@@ -174,14 +174,6 @@ class RequestSend:
     @sql_assert  # 数据库校验装饰器  返回res_sql_result
     @execution_duration(3000)  # 封装统计函数执行时间装饰器
     def http_request(self, dependent_switch=True, dependence=False, **kwargs):
-        requests_type_mapping = {
-            RequestType.JSON.value: self.request_type_for_json,
-            RequestType.DATA.value: self.request_type_for_data,
-            RequestType.PARAMS.value: self.request_type_for_params
-            # RequestType.FILE.value: self.request_type_for_file,
-            # RequestType.NONE.value: self.request_type_for_none,
-            # RequestType.EXPORT.value: self.request_type_for_export
-        }
         # 判断yaml文件的is_run参数是否执行用例
         if self.__yaml_case.is_run is True or self.__yaml_case.is_run is None:
             # 非依赖要执行的接口时 执行前置条件
@@ -194,6 +186,15 @@ class RequestSend:
             else:
                 # self.__yaml_case做缓存替换处理
                 self.__yaml_case = yamlcase_regular(self.__yaml_case)
+
+            requests_type_mapping = {
+                RequestType.JSON.value: self.request_type_for_json,
+                RequestType.DATA.value: self.request_type_for_data,
+                RequestType.PARAMS.value: self.request_type_for_params
+                # RequestType.FILE.value: self.request_type_for_file,
+                # RequestType.NONE.value: self.request_type_for_none,
+                # RequestType.EXPORT.value: self.request_type_for_export
+            }
             # requests_type_mapping.get(self._yaml_case.requestType) 执行的函数，比如JSON，执行request_type_for_json的函数
             # 判断依赖数据，不执行装饰器
             res = requests_type_mapping.get(self.__yaml_case.requestType)(
@@ -202,20 +203,13 @@ class RequestSend:
                 **kwargs
             )
 
-            # 转换格式
-            if dependence:
-                _res_data = self._check_params(
-                    res=res,
-                    yaml_data=self.__yaml_case,
-                    is_decorator=False
+            return (
+                self._check_params(
+                    res=res, yaml_data=self.__yaml_case, is_decorator=False
                 )
-            else:
-                _res_data = self._check_params(
-                    res=res,
-                    yaml_data=self.__yaml_case
-                )
-            return _res_data
-
+                if dependence
+                else self._check_params(res=res, yaml_data=self.__yaml_case)
+            )
         else:
             self.log.info(f'[{self.__yaml_case.remark}]用例不执行')
             case_skip()
