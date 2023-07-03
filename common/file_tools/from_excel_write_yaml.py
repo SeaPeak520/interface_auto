@@ -90,7 +90,7 @@ class FromExcelWriteYaml():
             if 'test' not in sheet:
                 module_list = []
                 # 获取sheet页的所有数据 并遍历
-                for i in self.excel_handle.get_sheet_data(sheetName=sheet):
+                for i in self.excel_handle.get_sheet_data(sheet_name=sheet):
                     # 把当前sheet的模块列表
                     if i['模块'] not in module_list:
                         module_list.append(i['模块'])
@@ -105,7 +105,7 @@ class FromExcelWriteYaml():
 
                     ###2、分析excel数据
                     # 模块的所有数据
-                    module_all_data = self.excel_handle.get_sheet_data(sheetName=sheet, moduleName=module)
+                    module_all_data = self.excel_handle.get_sheet_data(sheet_name=sheet, module_name=module)
 
                     # 获取当前模块的 功能列表
                     function_list = []
@@ -116,7 +116,8 @@ class FromExcelWriteYaml():
                     # 功能列表数据 ['保存律师退订短信信息接口', '保存订单谈案关联信息']
                     for function_list_value in function_list:
                         # 当前功能列的所有数据集合
-                        function_data = self.excel_handle.get_sheet_data(sheetName=sheet, funcName=function_list_value)
+                        function_data = self.excel_handle.get_sheet_data(sheet_name=sheet,
+                                                                         func_name=function_list_value)
 
                         # yaml名称  auto_call_saveUnsubscribeReason
                         # 解析用例名称创建空的yaml文件

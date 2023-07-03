@@ -63,30 +63,15 @@ caseCollectConcel:
       value: 操作成功
       AssertType:
       message: message不一致
-  #前后置
-  process:
-    #前置
-    setup:
-      #前置直接执行的sql
-      delete_sql: delete from table where user_id=1 and case_id=1
-      #前置执行的请求
-      request:
-        host: ${{host(1)}}
-        url: /mall-lawyer/add
-        method: post
-        headers:
-          Content-Type: application/form-data
-        requestType: params
-        requestData:
-          caseId: 1
-      #查询sql，替换请求参数的值，key和请求参数的key保持一致
-      is_yield:
-        caseId: select case_id from table where user_id=1 and case_id=1;
-    #后置
-    teardown:
-      #后置直接执行的sql
-      delete_sql: delete from table where user_id=1 and case_id=1
-      #从请求结果中获取参数拼接到sql执行
-      is_params:
-        $.data: delete from table where order_id=
+  #前置
+  setup_sql:
+    - delete from table where member_id=1 and standard_id=1;
+  #后置
+  teardown:
+    #后置直接执行的sql
+    sql:
+      - delete from table where order_id=1;
+    #从请求结果中获取参数拼接到sql执行
+    is_params:
+      $.data: delete from table where order_id=
 
