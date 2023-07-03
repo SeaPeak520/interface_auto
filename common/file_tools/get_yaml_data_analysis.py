@@ -92,12 +92,12 @@ class CaseDataCheck:
         )
 
     @property
-    def get_sql_data(self) -> Union[list, Text, None]:
-        return self.case_data.get(TestCaseEnum.SQL_DATA.value[0])
+    def get_database_assert_sql(self) -> Union[list, Text, None]:
+        return self.case_data.get(TestCaseEnum.DATABASE_ASSERT_SQL.value[0])
 
     @property
-    def get_sql_assert(self) -> Union[list, Text, None]:
-        return self.case_data.get(TestCaseEnum.SQL_ASSERT.value[0])
+    def get_database_assert_result(self) -> Union[list, Text, None]:
+        return self.case_data.get(TestCaseEnum.DATABASE_ASSERT_RESULT.value[0])
 
     @property
     def get_dependence_case_data(self):
@@ -130,7 +130,7 @@ class CaseData(CaseDataCheck):
                 self.case_id = key
                 # 检查model参数是否在测试用例中
                 super().check_params_exit()
-                case_data = {
+                _case_data = {
                     'method': self.get_method,
                     'is_run': self.case_data.get(TestCaseEnum.IS_RUN.value[0]),
                     'url': self.get_host,
@@ -142,16 +142,16 @@ class CaseData(CaseDataCheck):
                     'dependence_case_data': self.get_dependence_case_data,
                     'setup_sql': self.case_data.get(TestCaseEnum.SETUP_SQL.value[0]),
                     # "current_request_set_cache": self.case_data.get(TestCaseEnum.CURRENT_RE_SET_CACHE.value[0]),
-                    "sql_data": self.get_sql_data,
-                    "sql_assert": self.get_sql_assert,
+                    "database_assert_sql": self.get_database_assert_sql,
+                    "database_assert_result": self.get_database_assert_result,
                     "assert_data": self.get_assert,
                     # "sleep": self.case_data.get(TestCaseEnum.SLEEP.value[0]),
                     "teardown": self.case_data.get(TestCaseEnum.TEARDOWN.value[0])
                 }
                 if case_id_switch is True:
-                    case_list.append({key: TestCase(**case_data).dict()})
+                    case_list.append({key: TestCase(**_case_data).dict()})
                 else:
-                    case_list.append(TestCase(**case_data).dict())
+                    case_list.append(TestCase(**_case_data).dict())
         return case_list
 
 
@@ -159,7 +159,7 @@ class GetTestCase:
     """用例执行时获取Cache数据，初始化执行的test_case目录的__init__.py"""
 
     @staticmethod
-    def case_data(case_id_lists: List):
+    def get_case_data(case_id_lists: List):
         # 用例数据集合
         case_lists = []
         for i in case_id_lists:

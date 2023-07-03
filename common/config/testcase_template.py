@@ -4,12 +4,13 @@ import ast
 
 import allure
 import pytest
+
 from common.file_tools.get_yaml_data_analysis import GetTestCase
 from common.unit.RequestSend import RequestSend
 from common.utils.regular_control import config_regular
 
 case_id = case_list
-TestData = GetTestCase.case_data(case_id)
+TestData = GetTestCase.get_case_data(case_id)
 re_data = ast.literal_eval(config_regular(str(TestData)))
 
 @allure.epic("allureEpic")

@@ -31,7 +31,8 @@ class RequestSend:
         self.__yaml_case = TestCase(**yaml_case)
         self.mysql = SqlHandler()
 
-    def response_elapsed_total_seconds(self, res) -> float:
+    @staticmethod
+    def response_elapsed_total_seconds(res) -> float:
         """获取接口响应时长"""
         try:
             return round(res.elapsed.total_seconds() * 1000, 2)
@@ -42,90 +43,63 @@ class RequestSend:
             self,
             headers: Dict,
             method: Text,
-            is_setup: bool = False,
             **kwargs):
         """ 判断请求类型为json格式 传dict"""
-        # 用例的前置接口请求
-        if is_setup:
-            _requestData = self.__yaml_case.process['setup']['request']['requestData']
-            _url = self.__yaml_case.process['setup']['request']['host'] + self.__yaml_case.process['setup']['request'][
-                'url']
-        # 用例的接口请求
-        else:
-            _requestData = self.__yaml_case.requestData
-            _url = self.__yaml_case.url
         return requests.request(
             method=method,
-            url=_url,
-            json=_requestData,
+            url=self.__yaml_case.url,
+            json=self.__yaml_case.requestData,
             headers=headers,
             verify=False,
+            **kwargs
         )
 
     def request_type_for_params(
             self,
             headers: Dict,
             method: Text,
-            is_setup: bool = False,
             **kwargs):
         """处理 requestType 为 params 传dict"""
-        # 用例的前置接口请求
-        if is_setup:
-            _requestData = self.__yaml_case.process['setup']['request']['requestData']
-            _url = self.__yaml_case.process['setup']['request']['host'] + self.__yaml_case.process['setup']['request'][
-                'url']
-        # 用例的接口请求
-        else:
-            _requestData = self.__yaml_case.requestData
-            _url = self.__yaml_case.url
         return requests.request(
             method=method,
-            url=_url,
+            url=self.__yaml_case.url,
+            params=self.__yaml_case.requestData,
             headers=headers,
             verify=False,
-            params=_requestData,
+            **kwargs
         )
 
     def request_type_for_data(
             self,
             headers: Dict,
             method: Text,
-            is_setup: bool = False,
             **kwargs):
         """判断 requestType 为 data 类型"""
-        # 用例的前置接口请求
-        if is_setup:
-            _requestData = self.__yaml_case.process['setup']['request']['params']
-            _url = self.__yaml_case.process['setup']['request']['host'] + self.__yaml_case.process['setup']['request'][
-                'url']
-        # 用例的接口请求
-        else:
-            _requestData = self.__yaml_case.requestData
-            _url = self.__yaml_case.url
         return requests.request(
             method=method,
-            url=_url,
-            data=_requestData,
+            url=self.__yaml_case.url,
+            data=self.__yaml_case.requestData,
             headers=headers,
             verify=False,
+            **kwargs
         )
 
-    def _sql_data_handler(self):
+    def _database_assert_handler(self):
         """处理 sql 参数 ：数据库校验"""
         from common.utils import config
         # 数据库校验开关
         if config.mysql['mysql_db_switch']:
-            # 判断sql_data的类型是否为list类型（excel读取是str类型，判断第一个字符是否为'['）
-            if self.__yaml_case.sql_data and self.__yaml_case.sql_data[0] == '[':
-                sql_data = ast.literal_eval(self.__yaml_case.sql_data)
-                sql_assert = ast.literal_eval(self.__yaml_case.sql_assert)
+            # 判断database_assert_sql的类型是否为list类型（excel读取是str类型，判断第一个字符是否为'['）
+            if self.__yaml_case.database_assert_sql and self.__yaml_case.database_assert_sql[0] == '[':
+                _database_assert_sql = ast.literal_eval(self.__yaml_case.database_assert_sql)
+                _database_assert_result = ast.literal_eval(self.__yaml_case.database_assert_result)
             else:
-                sql_data = self.__yaml_case.sql_data
-                sql_assert = self.__yaml_case.sql_assert
+                _database_assert_sql = self.__yaml_case.database_assert_sql
+                _database_assert_result = self.__yaml_case.database_assert_result
 
-            # 判断不为空才执行校验   sql_data：可能为sql或None ；sql_assert：可能为0或1或None。 None不执行
-            if sql_data and sql_assert is not None:
-                return AssertExecution().assert_execution(sql_data, sql_assert)
+            # 判断不为空才执行校验   assert_sql：可能为sql或None ；sql_assert：可能为0或1或None。 None不执行
+            if _database_assert_sql and _database_assert_result is not None:
+                return AssertExecution().assert_execution(_database_assert_sql, _database_assert_result)
         else:
             self.log.info("数据库校验已关闭，用例不进行数据库校验")
 
@@ -146,14 +120,14 @@ class RequestSend:
             "yaml_body": yaml_data.requestData,
             "yaml_assert_data": yaml_data.assert_data,
             "yaml_data": yaml_data,
-            "yaml_sql_data": self.__yaml_case.sql_data,
-            "yaml_sql_assert": self.__yaml_case.sql_assert,
+            "yaml_database_assert_sql": self.__yaml_case.database_assert_sql,
+            "yaml_database_assert_result": self.__yaml_case.database_assert_result,
 
             "req_url": res.url,
             "req_method": res.request.method,
             "req_headers": res.request.headers,
 
-            "res_sql_result": None,
+            "res_assert_result": None,
             "res_data": res.text,
             "res_cookie": res.cookies,
             "res_time": self.response_elapsed_total_seconds(res),
@@ -223,6 +197,6 @@ if __name__ == '__main__':
     file = f'{TESTDATA_DIR}xiaofa/案源竞价/order_create.yaml'
 
     case_data = CaseData(file).case_process(case_id_switch=False)
-    yaml_data = case_data[0]
+    _yaml_data = case_data[0]
     # print(yaml_data)
-    RequestSend(yaml_data).http_request()
+    RequestSend(_yaml_data).http_request()

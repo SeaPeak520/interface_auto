@@ -3,29 +3,24 @@ import sys
 
 import allure
 import redis
+
 from common.log.log_control import LogHandler
 from common.utils import config
 
 sys.path.append(os.path.dirname(sys.path[0]))
 
-class RedisHelper:
-    def __init__(self):
-        self.conn = self.get_redis_conn(config.redis['test_host'],
-                                        int(config.redis['test_port']),
-                                        config.redis['test_pwd'],
-                                        int(config.redis['test_db']))
-        # print(self.conn)
-        self.pipe = self.conn.pipeline(transaction=True)
-        self.log = LogHandler(os.path.basename(__file__))
 
-    def get_redis_conn(self, host: str, port: int, pwd: str, db: str):
+class RedisHelper:
+    def __init__(self, host: str = config.redis['test_host'], port: int = config.redis['test_port'],
+                 pwd: str = config.redis['test_pwd'], db: str = config.redis['test_db']):
         self.__redis_pool = redis.ConnectionPool(host=host,
                                                  port=port,
                                                  password=pwd,
                                                  db=db,
                                                  decode_responses=True)
         self.__redis_conn = redis.Redis(connection_pool=self.__redis_pool)
-        return self.__redis_conn
+        self.pipe = self.__redis_conn.pipeline(transaction=True)
+        self.log = LogHandler(os.path.basename(__file__))
 
     # 获取多个key的值，传键：r.mget('manager:service:num','oms:orderId20220711')
     @allure.step('执行redis查询键值')
@@ -46,9 +41,9 @@ class RedisHelper:
 
     # 设置多个键值，传键值的字典：
     @allure.step('执行redis配置键值')
-    def mset(self, keyvalue_dict: dict[str, str | float]) -> list[bool]:
+    def mset(self, key_value_dict: dict[str, str | float]) -> list[bool]:
         """
-        :param keyvalue_dict: #置多个键值，传键值的字典
+        :param key_value_dict: #置多个键值，传键值的字典
                             {
                                  'test:4': 'Zarten_4',
                                  'test:5': 'Zarten_5'
@@ -56,17 +51,17 @@ class RedisHelper:
         :return: [True] (List)
         """
 
-        if not keyvalue_dict:
+        if not key_value_dict:
             self.log.info('查询的key为空')
         else:
             key_list = []
             value_list = []
-            for key, value in keyvalue_dict.items():
+            for key, value in key_value_dict.items():
                 key_list.append(key)
                 value_list.append(value)
             self.log.info(f'设置的key：{key_list}')
             self.log.info(f'设置的value：{value_list}')
-            self.pipe.mset(keyvalue_dict)
+            self.pipe.mset(key_value_dict)
             result = self.pipe.execute()
             self.log.info(f'设置结果：{result}')
             return result

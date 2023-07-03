@@ -22,30 +22,36 @@ class FromExcelWriteYaml():
     def get_sheet(self):
         return self.excel_handle.get_sheet
 
-    def dataHandle_json(self, data):
+    @staticmethod
+    def data_handler_json(data):
         """数据判空处理并转换JSON格式"""
         return json.dumps(data) if data else None
 
-    def dataHandle_dict(self, data):
+    @staticmethod
+    def data_handler_dict(data):
         """数据判空处理并转换DICT格式"""
         return json.loads(data) if data else {}
 
-    def dataConvert(self, data):
+    @staticmethod
+    def data_convert(data):
         """数据判空处理并使用ast.literal_eval转换格式"""
         return ast.literal_eval(data) if data else None
 
-    def dataHandle_int(self, data):
+    @staticmethod
+    def data_handler_int(data):
         """数据判空处理并转换INT格式"""
         return int(data) if data else None
 
-    def judge_is_null(self, data, is_null=False, message=''):
+    @staticmethod
+    def judge_is_null(data, is_null=False, message=''):
         """数据是否允许为空，默认不能为空"""
         if not is_null and data or is_null:
             return data
         else:
             raise BaseException(f"{message}数据不能为空")
 
-    def request_type_handler(self, headers=None):
+    @staticmethod
+    def request_type_handler(headers=None):
         """通过headers判断请求类型"""
         if headers is None or 'Content-Type' not in headers.keys():
             return 'params'
@@ -58,7 +64,8 @@ class FromExcelWriteYaml():
         else:
             return None
 
-    def dataHandle_host(self, address):
+    @staticmethod
+    def data_handler_host(address):
         """解析地址映射配置文件的host参数并提取"""
         from common.utils import config
         host = address.split('.com')[0] + '.com'
@@ -71,11 +78,13 @@ class FromExcelWriteYaml():
         else:
             raise BaseException(f"host: {host} ,配置文件没有对应的host参数")
 
-    def dataHandle_url(self, address):
+    @staticmethod
+    def data_handler_url(address):
         """解析地址提取URL"""
         return address.split('.com')[-1]
 
-    def dataHandler_is_run(self, is_run):
+    @staticmethod
+    def data_handler_is_run(is_run):
         if is_run and is_run == '是':
             return True
         elif is_run == '否':
@@ -84,7 +93,6 @@ class FromExcelWriteYaml():
             return None
 
     def write_yaml(self):
-
         # 1、循环遍历sheet，过滤test目录，并创建目录到data下（当有用例时创建）
         for sheet in self.get_sheet:  # sheet名称列表循环
             if 'test' not in sheet:
@@ -141,17 +149,17 @@ class FromExcelWriteYaml():
                             # 1、基础信息数据
                             address = self.judge_is_null(function_data_value['请求地址'],
                                                          message=f"{function_data_value['功能']}的请求地址")
-                            host = self.dataHandle_host(address)
-                            url = self.dataHandle_url(address)
+                            host = self.data_handler_host(address)
+                            url = self.data_handler_url(address)
                             method = self.judge_is_null(function_data_value['请求方式'],
                                                         message=f"{function_data_value['功能']}的请求方式")
                             remark = self.judge_is_null(function_data_value['用例标题'], is_null=True)
-                            is_run = self.dataHandler_is_run(function_data_value['是否运行'])
-                            headers = self.dataHandle_dict(self.judge_is_null(function_data_value['请求头'],
-                                                                              message=f"{function_data_value['功能']}的请求头"))
+                            is_run = self.data_handler_is_run(function_data_value['是否运行'])
+                            headers = self.data_handler_dict(self.judge_is_null(function_data_value['请求头'],
+                                                                                message=f"{function_data_value['功能']}的请求头"))
                             dependence = self.judge_is_null(function_data_value['关联用例数据'], is_null=True)
                             request_type = self.request_type_handler(headers)
-                            request_data = self.dataHandle_dict(
+                            request_data = self.data_handler_dict(
                                 self.judge_is_null(function_data_value['请求参数'], is_null=True))
 
                             info_case = {
@@ -166,26 +174,26 @@ class FromExcelWriteYaml():
                                 "dependence_case": None,
                                 "dependence_case_data": None,
                                 "setup_sql": None,
-                                "sql_data": None,
-                                "sql_assert": None,
+                                "database_assert_sql": None,
+                                "database_assert_result": None,
                                 "assert_data": None,
                                 "teardown": None
                             }
                             # 关联数据处理
                             if dependence:
                                 info_case['dependence_case'] = True
-                                info_case['dependence_case_data'] = self.dataHandle_dict(dependence)
+                                info_case['dependence_case_data'] = self.data_handler_dict(dependence)
 
                             # 数据库校验处理
                             # 缺少不会入库 != ''兼容0的值
                             if function_data_value['数据库校验语句'] and function_data_value['数据库校验结果'] != '':
-                                info_case['sql_data'] = function_data_value['数据库校验语句']
-                                info_case['sql_assert'] = function_data_value['数据库校验结果']
+                                info_case['database_assert_sql'] = function_data_value['数据库校验语句']
+                                info_case['database_assert_result'] = function_data_value['数据库校验结果']
 
                             # 2、校验数据
                             assert_data = {}
                             if status_code := function_data_value['校验状态码']:
-                                assert_data["status_code"] = self.dataHandle_int(status_code)
+                                assert_data["status_code"] = self.data_handler_int(status_code)
 
                             # 检验字段集合
                             # ['$.code', '$.message']
@@ -207,7 +215,7 @@ class FromExcelWriteYaml():
 
                             #######3、前置数据处理
                             if setup_execute_sql := function_data_value['前置条件(要执行的sql)']:
-                                if setup_execute_sql := self.dataConvert(setup_execute_sql):
+                                if setup_execute_sql := self.data_convert(setup_execute_sql):
                                     info_case['setup_sql'] = setup_execute_sql
 
                             #######4、后置数据处理
@@ -217,10 +225,10 @@ class FromExcelWriteYaml():
                             teardown_data = {}
                             if teardown_execute_sql or teardown_to_params:
                                 # 后置-执行sql处理
-                                if teardown_execute_sql := self.dataConvert(teardown_execute_sql):
+                                if teardown_execute_sql := self.data_convert(teardown_execute_sql):
                                     teardown_data['sql'] = teardown_execute_sql
                                 # 后置-需要把响应参数拼接到sql处理
-                                if teardown_to_params := self.dataHandle_dict(teardown_to_params):
+                                if teardown_to_params := self.data_handler_dict(teardown_to_params):
                                     teardown_data['is_params'] = teardown_to_params
 
                             if teardown_data:
@@ -230,7 +238,7 @@ class FromExcelWriteYaml():
                             case_data[function_data_value['用例名称'].split('test_')[-1]] = info_case
 
                         # 用case数据写入yaml文件中
-                        YamlHandler(case_path).DictWriteYaml(case_data)
+                        YamlHandler(case_path).write_yaml_by_dict(case_data)
 
 
 if __name__ == '__main__':

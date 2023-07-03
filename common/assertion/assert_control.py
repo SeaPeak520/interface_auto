@@ -17,9 +17,11 @@ class AssertUtil:
     def __init__(self, assert_data, response_data, status_code, remark: str,
                  request_data: Optional[dict] = None) -> None:
         """
-        :param assert_data:  yaml文件中assert的数据
-        :param response_data: 请求接口返回的数据
-        :param request_data: yaml文件中requestData的数据
+        :param assert_data: yaml文件中assert的数据
+        :param response_data:  请求接口返回的数据(响应数据)
+        :param status_code: 状态码
+        :param remark: 用例备注信息（打印日志）
+        :param request_data:  yaml文件中requestData的数据
         """
         self.assert_data = assert_data
         self.response_data = response_data
@@ -39,7 +41,8 @@ class AssertUtil:
 
         return ast.literal_eval(str(self.assert_data))
 
-    def get_type(self, get_assert_data):
+    @staticmethod
+    def get_type(get_assert_data):
         """
         # 判断type、value、jsonpath、AssertType是否在key里，并返回value
         # 获取断言类型对应的枚举值
@@ -52,7 +55,8 @@ class AssertUtil:
         name = AssertMethod(get_assert_data.get("type")).name
         return name
 
-    def get_value(self, get_assert_data):
+    @staticmethod
+    def get_value(get_assert_data):
         """
         获取assert_data的 key为value的值
         :return: 200
@@ -60,7 +64,8 @@ class AssertUtil:
         assert 'value' in get_assert_data.keys(), f" 断言数据: {get_assert_data} 中缺少 `value` 属性 "
         return get_assert_data.get("value")
 
-    def get_jsonpath(self, get_assert_data):
+    @staticmethod
+    def get_jsonpath(get_assert_data):
         """
         获取assert_data的 key为jsonpath的值
         :return: $.code
@@ -68,7 +73,8 @@ class AssertUtil:
         assert 'jsonpath' in get_assert_data.keys(), f" 断言数据: {get_assert_data} 中缺少 `jsonpath` 属性 "
         return get_assert_data.get("jsonpath")
 
-    def get_assert_type(self, get_assert_data):
+    @staticmethod
+    def get_assert_type(get_assert_data):
         """
         获取assert_data的 key为AssertType的值
         :return: None
@@ -77,28 +83,21 @@ class AssertUtil:
         return get_assert_data.get("AssertType")
 
     @staticmethod
-    def functions_mapping():
-        """
-        # 通过变量get_type 动态获取assert_type文件的方法，并传值执行
-        获取assert_type的各个方法的内存地址
-        :return:{'equals': <function equals at 0x000002916CE884A0>, 'less_than': <function less_than at 0x000002916CF2E200>....}
-        """
-        return load_module_functions(assert_type)
-
-    def _assert(self, get_type, check_value: Any, expect_value: Any, message: Text = ""):
+    def _assert(get_type, check_value: Any, expect_value: Any, message: Text = ""):
         """
         :param check_value:  要校验的值
         :param expect_value:  预期值
         :param message:  预期不符提示的信息
         :return: self.functions_mapping()[self.get_type]执行assert_type文件的equals方法
         """
-        self.functions_mapping()[get_type](check_value, expect_value, str(message))
+        load_module_functions(assert_type)[get_type](check_value, expect_value, str(message))
 
     @property
     def get_response_data(self):
         return json.loads(self.response_data)
 
-    def get_message(self, get_assert_data):
+    @staticmethod
+    def get_message(get_assert_data):
         """
         获取断言描述，如果未填写，则返回 `None`
         :return:
@@ -182,47 +181,46 @@ class AssertUtil:
 
 
 class AssertExecution(SqlHandler):
-
-    def _extracted_from_assert_execution(self, sql_data, sql_assert):
-        # 判断sql_data和sql_assert是否符合书写规范
-        if not sql_data and not sql_assert:
+    def _extracted_from_assert_execution(self, assert_sql, assert_result):
+        # 判断assert_sql和assert_result是否符合书写规范
+        if not assert_sql and not assert_result:
             return None
-        if sql_data and not sql_assert or not sql_data:
+        if assert_sql and not assert_result or not assert_sql:
             raise ValueError("校验语句和校验值不匹配，请检查")
 
         # 判断sql的语法
         _sql_type = ['update', 'delete', 'insert', 'select']
-        if all(i not in sql_data for i in _sql_type):
+        if all(i not in assert_sql for i in _sql_type):
             raise DataAcquisitionFailed("数据库校验的sql语句语法有问题")
         # 执行sql获取数量，然后做校验
-        num = self.execution_by_sql_type(sql_data, state='num')
-        assert_type.equals(num, int(sql_assert),
-                           f'执行结果：{num}, 预期结果：{int(sql_assert)}，数据库校验不通过')
+        num = self.execution_by_sql_type(assert_sql, state='num')
+        assert_type.equals(num, int(assert_result),
+                           f'执行结果：{num}, 预期结果：{int(assert_result)}，数据库校验不通过')
         return True
 
     """ 处理断言sql数据 """
 
-    def assert_execution(self, sql_data: Union[list, Text], sql_assert: Union[list, Text]):
+    def assert_execution(self, assert_sql: Union[list, Text], assert_result: Union[list, Text]):
         """
          执行 sql, 负责处理 yaml 文件中的断言需要执行多条 sql 的场景，最终会把所有数据校验后，以布尔类型返回
-        :param sql_data: sql
-        :param sql_assert: 校验数据（数量）
+        :param assert_sql: sql
+        :param assert_result: 校验数据（数量）
         :return:
         """
         try:
-            if isinstance(sql_data, str):
-                return self._extracted_from_assert_execution(sql_data, sql_assert)
-            elif isinstance(sql_data, list):
-                # 判断sql_data和sql_assert是否符合书写规范
-                if not sql_data and not sql_assert:
+            if isinstance(assert_sql, str):
+                return self._extracted_from_assert_execution(assert_sql, assert_result)
+            elif isinstance(assert_sql, list):
+                # 判断assert_sql和assert_result是否符合书写规范
+                if not assert_sql and not assert_result:
                     return None
-                if len(sql_data) != len(sql_assert):
+                if len(assert_sql) != len(assert_result):
                     raise ValueError("校验语句和校验值不匹配，请检查")
 
-                # 对sql_data进行遍历
-                for k, sql in enumerate(sql_data):
+                # 对assert_sql进行遍历
+                for k, sql in enumerate(assert_sql):
                     # 判断sql和校验值是否为空
-                    if (sql and not sql_assert[k]) or (not sql and sql_assert[k]):
+                    if (sql and not assert_result[k]) or (not sql and assert_result[k]):
                         raise ValueError("校验语句和校验值不匹配，请检查")
 
                     if sql:
@@ -232,7 +230,7 @@ class AssertExecution(SqlHandler):
                             raise DataAcquisitionFailed("数据库校验的sql语句语法有问题")
                         # 执行sql获取数量，然后做校验
                         num = self.execution_by_sql_type(sql, state='num')
-                        assert_type.equals(num, int(sql_assert[k]), '数据库校验不通过')
+                        assert_type.equals(num, int(assert_result[k]), '数据库校验不通过')
                         return True
             else:
                 raise ValueTypeError("sql数据类型不正确，接受的是list或str")

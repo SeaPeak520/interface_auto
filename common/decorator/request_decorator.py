@@ -22,7 +22,7 @@ def request_decorator(switch):
                                f"请求内容: {res.yaml_body}\n" \
                                f"接口响应内容: {res.res_data}\n" \
                                f"接口响应时长: {res.res_time} ms\n" \
-                               f"数据库校验结果: {res.res_sql_result}\n" \
+                               f"数据库校验结果: {res.res_assert_result}\n" \
                                f"Http状态码: {res.res_status_code}\n" \
                                "====================================================="
                     log.info(_log_msg)

@@ -37,17 +37,17 @@ class DependentCase:
         except KeyError:
             return None
 
-    def response_by_case_id(self, _case_id, _replace_key) -> dict:
+    def response_by_case_id(self, case_id, replace_key) -> dict:
         """通过 case_id 获取用例，然后用_replace_key替换请求参数，最后进行接口请求并返回"""
         from common.unit.RequestSend import RequestSend
         # 判断依赖数据类型，
-        re_data = config_regular(str(self.get_cache(_case_id)))
+        re_data = config_regular(str(self.get_cache(case_id)))
         # 把str类型转成字典
         _re_data = ast.literal_eval(re_data)
 
         # 替换依赖接口的请求参数值
-        if _replace_key:
-            for r, k in _replace_key.items():
+        if replace_key:
+            for r, k in replace_key.items():
                 r_list = r.split('_')
                 r_len = len(r_list)
                 if r_len == 1:
@@ -57,7 +57,7 @@ class DependentCase:
                 elif r_len == 3:
                     _re_data['requestData'][r_list[r_len - 3]][r_list[r_len - 2]][r_list[r_len - 1]] = k
                 else:
-                    raise ValueError(f"{_replace_key} 格式不规范，请检查！")
+                    raise ValueError(f"{replace_key} 格式不规范，请检查！")
         # 执行请求
         res = RequestSend(_re_data).http_request(dependence=True).res_data
         # 转换类型
@@ -73,21 +73,22 @@ class DependentCase:
         except KeyError:
             return None
 
-    def cache_by_sql(self, _dependent_sql, _set_cache):
+    @staticmethod
+    def cache_by_sql(dependent_sql, set_cache):
         """
         执行_dependent_sql，设置缓存，key为_set_cache，value为sql执行结果
-        :param _dependent_sql:
-        :param _set_cache:
+        :param dependent_sql:
+        :param set_cache:
         :return:
         """
         from common.db.mysql_control import MysqlDB
         m = MysqlDB()
-        if sql_data := m.select(_dependent_sql, state='one'):
+        if sql_data := m.select(dependent_sql, state='one'):
             sql_data = sql_data[0]
         else:
             sql_data = None
-        if _set_cache is not None:
-            CacheHandler.update_cache(cache_name=_set_cache, value=sql_data)
+        if set_cache is not None:
+            CacheHandler.update_cache(cache_name=set_cache, value=sql_data)
 
     def _dependent_type_for_sql(
             self,

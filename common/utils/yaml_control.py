@@ -19,14 +19,15 @@ class YamlHandler:
     # 获取yaml文件的单个数据
     def get_yaml_data(self) -> dict[str, str | dict]:
         """
-        :param dataFile: 文件路径
         :return: 文件的dict数据
         """
         with open(self.file, 'r', encoding='utf-8') as f:
             return yaml.load(f, Loader=yaml.FullLoader)
 
-    def update_dict(self, key, value):
-        """更新yaml文件中的数据，采用key_value方式
+    def update_yaml_data(self, key, value):
+        """
+        读取yaml全量数据（yaml.load方式），更改，再全量写入文件中
+        更新yaml文件中的数据，采用key_value方式
         ("case_common:allureEpic", 'v1222')
         :param key: "case_common:allureEpic"
         :param value: 'v1222'
@@ -55,10 +56,11 @@ class YamlHandler:
         with open(self.file, 'w') as file:
             yaml.safe_dump(data, file, default_flow_style=False, sort_keys=False, encoding='utf-8', allow_unicode=True)
 
-    def write_yaml_data(self, key: str, value) -> int:
+    def set_write_yaml_data(self, key: str, value) -> int:
         """
+        读取yaml全量数据（以行读取），更改行数据，再全量写入文件中
         更改 yaml 文件中的值, 并且保留注释内容 {'case_common': {'allureEpic': 'V2.1'}}
-        :param key: 字典的key   allureEpic
+        :param key: 字典的key   文本匹配allureEpic
         :param value: 写入的值  V1.1
         :return:
         """
@@ -80,7 +82,7 @@ class YamlHandler:
             file.close()
             return flag
 
-    def DictWriteYaml(self, dict_data):
+    def write_yaml_by_dict(self, dict_data):
         # 不添加则会写入null，作用：把None不写入值
         def represent_none(self, _):
             return self.represent_scalar('tag:yaml.org,2002:null', '')

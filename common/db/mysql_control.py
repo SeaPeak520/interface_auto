@@ -4,11 +4,12 @@ from typing import List, Text, Union
 
 import allure
 import pymysql
+from dbutils.pooled_db import PooledDB
+
 from common.exceptions.exceptions import DataAcquisitionFailed, ValueTypeError
 from common.log.log_control import LogHandler
 from common.utils import config
 from common.utils.models import load_module_functions
-from dbutils.pooled_db import PooledDB
 
 sys.path.append(os.path.dirname(sys.path[0]))
 
@@ -16,11 +17,11 @@ sys.path.append(os.path.dirname(sys.path[0]))
 class MysqlDB:
     # 初始化
     def __init__(self):
-        self.conn = self.getmysqlconn(config.mysql['test_host'],
-                                      int(config.mysql['test_port']),
-                                      config.mysql['test_user'],
-                                      config.mysql['test_pwd'],
-                                      config.mysql['test_db'])
+        self.conn = self.get_mysql_conn(config.mysql['test_host'],
+                                        int(config.mysql['test_port']),
+                                        config.mysql['test_user'],
+                                        config.mysql['test_pwd'],
+                                        config.mysql['test_db'])
         self.cur = self.conn.cursor()
         self.log = LogHandler(os.path.basename(__file__))
 
@@ -34,7 +35,7 @@ class MysqlDB:
         except AttributeError as error:
             self.log.error("数据库关闭失败，失败原因 %s", error)
 
-    def getmysqlconn(self, host: str, port: int, user: str, pwd: str, db: str):
+    def get_mysql_conn(self, host: str, port: int, user: str, pwd: str, db: str):
         """
         :param host: 数据库主机
         :param port: 数据库端口
@@ -146,27 +147,23 @@ class MysqlDB:
 
 
 class SqlHandler(MysqlDB):
-    def mapping_sqltype(self):
-        return load_module_functions(MysqlDB)
 
     def execution_sql(self, sql: str, state: str = 'all'):
         """
           :param sql: 要执行的sql
           :param state: num 查询数量 all查询所有 one查询单条
         """
-        _sqltype = ['update', 'delete', 'insert', 'select']
-        sqltype = sql[:6].lower()
-        if any(i in sqltype for i in _sqltype):
-            if sqltype == 'select':
-                return self.mapping_sqltype()[sqltype](self, sql, state)
+        _sql_type = ['update', 'delete', 'insert', 'select']
+        sql_type = sql[:6].lower()
+        if any(i in sql_type for i in _sql_type):
+            if sql_type == 'select':
+                return load_module_functions(MysqlDB)[sql_type](self, sql, state)
             else:
-                return self.mapping_sqltype()[sqltype](self, sql)
+                return load_module_functions(MysqlDB)[sql_type](self, sql)
         else:
-            raise DataAcquisitionFailed(f"sql类型不正确，应为{_sqltype}")
+            raise DataAcquisitionFailed(f"sql类型不正确，应为{_sql_type}")
 
-            # _type值，传num
-
-    # state值控制查询单条还是全部，不传查全部，传one查单条
+    # state值控制查询单条还是全部，不传查全部，传one查单条,传num 查数量
     def execution_by_sql_type(self, sql: Union[List, None, Text], state: str = 'all'):
         if isinstance(sql, list):
             return [self.execution_sql(i, state) for i in sql]
@@ -178,7 +175,7 @@ class SqlHandler(MysqlDB):
 
 if __name__ == "__main__":
     # 用法
-    sql = "select * from table where user_id=1 and case_id=1;"
-    sqkl = ["select * from "]
+    ss_sql = "select * from table where user_id=1 and case_id=1;"
+    # sqkl = ["select * from "]
     s = SqlHandler()
-    print(s.sql_handle(sql, state='num'))
+    print(s.sql_handle(_sql, state='num'))

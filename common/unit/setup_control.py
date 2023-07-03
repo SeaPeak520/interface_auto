@@ -2,10 +2,10 @@ from common.db.mysql_control import SqlHandler
 from common.exceptions.exceptions import ValueTypeError
 
 
-def setup_handler(__yaml_case):
+def setup_handler(yaml_case):
     """前置条件的数据处理"""
 
-    if not (setup_sql := __yaml_case.setup_sql):
+    if not (setup_sql := yaml_case.setup_sql):
         return None
     s = SqlHandler()
     if isinstance(setup_sql, list):

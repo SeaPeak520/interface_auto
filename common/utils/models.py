@@ -46,8 +46,8 @@ class TestCaseEnum(Enum):
     REQUEST_DATA = ("requestData", True)
     DE_CASE = ("dependence_case", True)
     DE_CASE_DATA = ("dependence_case_data", False)
-    SQL_DATA = ("sql_data", True)
-    SQL_ASSERT = ("sql_assert", True)
+    DATABASE_ASSERT_SQL = ("database_assert_sql", True)
+    DATABASE_ASSERT_RESULT = ("database_assert_result", True)
     CURRENT_RE_SET_CACHE = ("current_request_set_cache", False)
     SETUP_SQL = ("setup_sql", False)
     ASSERT_DATA = ("assert_data", True)
@@ -115,8 +115,8 @@ class TestCase(BaseModel):
     dependence_case: Union[None, Text] = False
     dependence_case_data: Optional[Union[None, List["DependentCaseData"], Text]] = None
     setup_sql: Union[None, List, Text]
-    sql_data: Union[list, Text, None]
-    sql_assert: Union[list, Text, None]
+    database_assert_sql: Union[list, Text, None]
+    database_assert_result: Union[list, Text, None]
     assert_data: Union[Dict, Text, None]
     # current_request_set_cache: Optional[List["CurrentRequestSetCache"]]
     # sleep: Optional[Union[int, float]]
@@ -147,14 +147,14 @@ class ResponseData(BaseModel):
     yaml_body: Any
     yaml_assert_data: Dict
     yaml_data: "TestCase"
-    yaml_sql_data: Union[None, list, Text]
-    yaml_sql_assert: Union[None, list, Text]
+    yaml_database_assert_sql: Union[None, list, Text]
+    yaml_database_assert_result: Union[None, list, Text]
 
     req_url: Text
     req_method: Text
     req_headers: Dict
 
-    res_sql_result: Optional[bool]
+    res_assert_result: Optional[bool]
     res_data: Any
     res_cookie: Dict
     res_time: Union[int, float]
@@ -164,7 +164,7 @@ class ResponseData(BaseModel):
     is_decorator: bool
 
 
-class SetupTeardown_Type(Enum):
+class SetupTeardownType(Enum):
     """
     request请求发送，请求参数的数据类型
     """
@@ -202,3 +202,10 @@ class AllureAttachmentType(Enum):
     WEBM = "webm"
 
     PDF = "pdf"
+
+
+class EmailInfo(BaseModel):
+    host: Text
+    port: int
+    user: Text
+    pwd: Text
