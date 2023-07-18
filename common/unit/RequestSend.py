@@ -10,16 +10,16 @@ from common.assertion.assert_control import AssertExecution
 from common.db.mysql_control import SqlHandler
 from common.decorator.allure_decorator import allure_decorator
 from common.decorator.assert_decorator import assert_decorator
+from common.decorator.database_decorator import database_sql_assert
 from common.decorator.request_decorator import request_decorator
 from common.decorator.runtime_decorator import execution_duration
-from common.decorator.sql_decorator import sql_assert
 from common.decorator.teardown_decorator import teardown_decorator
 from common.log.log_control import LogHandler
 from common.unit import case_skip
 from common.unit.dependent_case import DependentCase
 from common.unit.setup_control import setup_handler
 from common.utils.models import TestCase, RequestType, ResponseData
-from common.utils.regular_control import yamlcase_regular
+from common.utils.regular_control import yaml_case_regular
 
 sys.path.append(os.path.dirname(sys.path[0]))
 
@@ -145,21 +145,27 @@ class RequestSend:
     @assert_decorator  # 断言装饰器
     @allure_decorator  # allure步骤装饰器
     @request_decorator(switch=True)  # 接口请求装饰器（打印请求信息日志）
-    @sql_assert  # 数据库校验装饰器  返回res_sql_result
+    @database_sql_assert  # 数据库校验装饰器  返回res_sql_result
     @execution_duration(3000)  # 封装统计函数执行时间装饰器
-    def http_request(self, dependent_switch=True, dependence=False, **kwargs):
+    def http_request(self, is_decorator=True, **kwargs):
+        """
+        :param dependent_switch: True
+        :param is_decorator: 用于判断是否执行装饰器，True执行，False不执行，主要用于关联接口时不需要执行装饰器
+        :param kwargs:
+        :return:
+        """
         # 判断yaml文件的is_run参数是否执行用例
         if self.__yaml_case.is_run is True or self.__yaml_case.is_run is None:
             # 非依赖要执行的接口时 执行前置条件
-            if not dependence:
-                setup_handler(self.__yaml_case)
+            # if not dependence:
+            setup_handler(self.__yaml_case)
             # 如果有依赖数据统一在那边做处理，否则直接处理缓存
-            if dependent_switch is True:
+            if self.__yaml_case.dependence_case is True:
                 # 把self.__yaml_case传到DependentCase类处理，返回正则匹配到的数据
                 self.__yaml_case = DependentCase(self.__yaml_case).get_dependent_data()
             else:
                 # self.__yaml_case做缓存替换处理
-                self.__yaml_case = yamlcase_regular(self.__yaml_case)
+                self.__yaml_case = yaml_case_regular(self.__yaml_case)
 
             requests_type_mapping = {
                 RequestType.JSON.value: self.request_type_for_json,
@@ -170,19 +176,18 @@ class RequestSend:
                 # RequestType.EXPORT.value: self.request_type_for_export
             }
             # requests_type_mapping.get(self._yaml_case.requestType) 执行的函数，比如JSON，执行request_type_for_json的函数
-            # 判断依赖数据，不执行装饰器
             res = requests_type_mapping.get(self.__yaml_case.requestType)(
                 headers=self.__yaml_case.headers,
                 method=self.__yaml_case.method,
                 **kwargs
             )
-
+            # 判断用例关联依赖，不执行装饰器
             return (
                 self._check_params(
-                    res=res, yaml_data=self.__yaml_case, is_decorator=False
+                    res=res, yaml_data=self.__yaml_case
                 )
-                if dependence
-                else self._check_params(res=res, yaml_data=self.__yaml_case)
+                if is_decorator
+                else self._check_params(res=res, yaml_data=self.__yaml_case, is_decorator=False)
             )
         else:
             self.log.info(f'[{self.__yaml_case.remark}]用例不执行')

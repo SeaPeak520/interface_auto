@@ -4,10 +4,13 @@
 import datetime
 import json
 import os
+import re
 import time
+from typing import List
 
 import pytest
 import requests
+
 from common.config import TOKEN_FILE, PRE_DATA_DIR
 from common.log.log_control import LogHandler
 from common.utils.cache_control import CacheHandler
@@ -40,14 +43,17 @@ def set_token():
         CacheHandler.update_cache(cache_name='token', value=token_dic['token'])
 
 
-# def pytest_collection_modifyitems(items):
-#     """
-#     测试用例收集完成时，将收集到的 item 的 name 和 node_id 的中文显示在控制台上
-#     :return:
-#     """
-#     for item in items:
-#         item.name = item.name.encode("utf-8").decode("unicode_escape")
-#         item._nodeid = item.nodeid.encode("utf-8").decode("unicode_escape")
+def pytest_collection_modifyitems(items: List["Item"]) -> None:
+    for item in items:
+        item.name = item.name.encode('utf-8').decode('unicode-escape')
+        # 目录包含中文会乱码，使用正则匹配处理单独处理unicode
+        regular_pattern = r"\[(.*?)]"
+        if key_list := re.findall(regular_pattern, item._nodeid):  # 正则匹配到的值集合['host()', 'host()']
+            for key in key_list:
+                value = key.encode('utf-8').decode('unicode-escape')
+                pattern = re.compile(regular_pattern)
+                item._nodeid = re.sub(pattern, f"[{str(value)}]", item._nodeid)  # 把host替换成config文件的值
+        # item._nodeid = item.nodeid.encode('utf-8').decode('unicode-escape')
 #
 #     # 期望用例顺序
 #     # print("收集到的测试用例:%s" % items)

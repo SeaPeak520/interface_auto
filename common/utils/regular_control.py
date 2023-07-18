@@ -62,7 +62,7 @@ class Context:
         计算当前时间
         :return:
         """
-        return datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        return datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
     @classmethod
     def today_date(cls):
@@ -92,7 +92,7 @@ def config_regular(target: str) -> str:
     使用正则替换请求数据
     ${{host}}
     :param target: 用例数据，str格式
-    :param str类型或json类型 的用例数据
+    str类型或json类型 的用例数据
     :return:
     getattr(config_regular(), func_name)(value_name) 执行config_regular类的 func_name函数，传入value_name
     """
@@ -122,7 +122,7 @@ def cache_regular(target: str) -> str:
     使用正则替换缓存数据
     $cache{login_init}
     :param target: 用例数据，str格式
-    :param str类型或json类型 的用例数据
+    str类型或json类型 的用例数据
     :return:
     getattr(Context(), func_name)(value_name) 执行Context类的 func_name函数，传入value_name
     """
@@ -135,7 +135,7 @@ def cache_regular(target: str) -> str:
         if key_list := re.findall(regular_pattern, target):  # 正则匹配到的值集合['login_init']
             for key in key_list:
                 pattern = re.compile(
-                    r'\$cache\{' + key.replace('$', "\$").replace('[', '\[') + r'\}'
+                    r'\$cache\{' + key.replace('$', "\$").replace('[', '\[') + r'}'
                 )
                 cache_data = CacheHandler.get_cache(key)
                 # 使用sub方法，替换已经拿到的内容
@@ -150,7 +150,7 @@ def cache_regular(target: str) -> str:
         raise
 
 
-def yamlcase_regular(yaml_case: str) -> "TestCase":
+def yaml_case_regular(yaml_case) -> "TestCase":
     _regular_data = cache_regular(f"{yaml_case.dict()}")
     _regular_data = ast.literal_eval(_regular_data)
     return TestCase(**_regular_data)
@@ -162,4 +162,5 @@ if __name__ == '__main__':
 
     file = f'{TESTDATA_DIR}xiaofa/案源收藏/caseCollectAdd.yaml'
     yaml_data = str(YamlHandler(file).get_yaml_data())
-    yamlcase_regular(yaml_data)
+    # print(yaml_case_regular(yaml_data))
+    print(Context.get_time())

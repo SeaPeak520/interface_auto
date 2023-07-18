@@ -7,7 +7,7 @@ from common.assertion.assert_control import AssertExecution
 from common.log.log_control import LogHandler
 
 
-def sql_assert(func):
+def database_sql_assert(func):
     @wraps(func)
     def inner_wrapper(*args, **kwargs):
         res = func(*args, **kwargs)

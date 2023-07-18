@@ -59,11 +59,10 @@ class DependentCase:
                 else:
                     raise ValueError(f"{replace_key} 格式不规范，请检查！")
         # 执行请求
-        res = RequestSend(_re_data).http_request(dependence=True).res_data
-        # 转换类型
-        res = json.loads(res)
+        res = RequestSend(_re_data).http_request(is_decorator=False)
+        self.log.warning(res)
 
-        return res
+        return json.loads(res.res_data)
 
     @classmethod
     def replace_key(cls, dependent_data: "DependentData") -> dict:
@@ -118,11 +117,10 @@ class DependentCase:
         判断是否有数据依赖
         :return:
         """
-
         # 获取用例中的dependent_type值，判断该用例是否需要执行依赖
         _dependent_type = self.__yaml_case.dependence_case
         # 判断是否有依赖
-        if _dependent_type is True or _dependent_type == 'True':
+        if _dependent_type is True:
             # 获取依赖用例数据
             _dependence_case_dates = self.__yaml_case.dependence_case_data
             # 循环所有需要依赖的数据

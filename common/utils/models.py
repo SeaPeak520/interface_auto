@@ -112,7 +112,7 @@ class TestCase(BaseModel):
     headers: Union[None, Dict, Text]
     requestType: Text
     requestData: Union[Dict, Text, List, None]
-    dependence_case: Union[None, Text] = False
+    dependence_case: Union[None, bool] = False
     dependence_case_data: Optional[Union[None, List["DependentCaseData"], Text]] = None
     setup_sql: Union[None, List, Text]
     database_assert_sql: Union[list, Text, None]
@@ -170,7 +170,7 @@ class SetupTeardownType(Enum):
     """
     INSERT = "INSERT"
     DELETE = "DELETE"
-    SELETE = "SELETE"
+    SELECT = "SELECT"
     NUM = 'NUM'
 
 
