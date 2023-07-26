@@ -7,9 +7,10 @@ from email.mime.text import MIMEText
 from email.utils import parseaddr, formataddr
 from typing import Dict
 
+from common.allure.allure_report_data import AllureFileClean
 from common.log.log_control import LogHandler
 from common.utils import config
-from common.utils.models import EmailInfo
+from common.utils.models import Email, TestMetrics
 
 sys.path.append(os.path.dirname(sys.path[0]))
 
@@ -27,13 +28,13 @@ class EmailHelper:
         """
         if not email_info:
             email_info = {
-                "host": config.email['host'],
-                "port": int(config.email['port']),
-                "user": config.email['user'],
-                "pwd": config.email['password'],
+                "host": config.email.host,
+                "port": int(config.email.port),
+                "user": config.email.user,
+                "pwd": config.email.pwd,
             }
         # 校验email_info格式并返回
-        self.info = EmailInfo(**email_info)
+        self.info = Email(**email_info)
         if self.info.port == 465:
             self.smtp = smtplib.SMTP_SSL(self.info.host, self.info.port)
             self.smtp.login(user=self.info.user, password=self.info.pwd)
@@ -143,6 +144,48 @@ class EmailHelper:
             self.log.info("邮件发送成功")
         except smtplib.SMTPException as e:
             self.log.error(f"Error: 无法发送邮件,报错信息如下：{e}")
+
+
+class SendReport(EmailHelper):
+    def __init__(self, metrics: TestMetrics, info=None):
+        self.metrics = metrics
+        self.allure_data = AllureFileClean()
+        self.failed_cases_detail = self.allure_data.get_failed_cases_detail()
+
+        # super().__init__(info)
+
+    def send(self):
+        message_subject = f"{config.project_name}接口自动化报告"
+        message_content = f"""
+               各位同事, 大家好:
+                   自动化用例执行完成，执行结果如下:
+                   用例运行总数: {self.metrics.total} 个
+                   通过用例个数: {self.metrics.passed} 个
+                   失败用例个数: {self.metrics.failed} 个
+                   异常用例个数: {self.metrics.broken} 个
+                   跳过用例个数: {self.metrics.skipped} 个
+                   成  功   率: {self.metrics.pass_rate} %
+
+               {self.failed_cases_detail}
+
+               **********************************
+               jenkins地址：https://121.xx.xx.47:8989/login
+               详细情况可登录jenkins平台查看，非相关负责人员可忽略此消息。谢谢。
+               """
+        content = {
+            "message_content": message_content,
+            "message_subject": message_subject,
+            "from_user": config.email['sender'],
+            "to_user": config.email['to']
+        }
+
+        _send = {
+            "sender": config.email['sender'],
+            "receivers": config.email['receivers']
+        }
+
+        self.message_text(content)
+        self.sendmail(_send)
 
 
 if __name__ == '__main__':

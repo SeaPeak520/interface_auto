@@ -69,11 +69,11 @@ class FromExcelWriteYaml():
         """解析地址映射配置文件的host参数并提取"""
         from common.utils import config
         host = address.split('.com')[0] + '.com'
-        if config.info['gateway_host'] in host:
+        if config.host.gateway_host in host:
             return "${{gateway_host}}"
-        elif config.info['lawyer_host'] in host:
+        elif config.host.lawyer_host in host:
             return "${{lawyer_host}}"
-        elif config.info['callback_host'] in host:
+        elif config.host.callback_host in host:
             return "${{callback_host}}"
         else:
             raise BaseException(f"host: {host} ,配置文件没有对应的host参数")

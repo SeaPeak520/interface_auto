@@ -1,4 +1,5 @@
 import types
+from dataclasses import dataclass
 from enum import Enum, unique
 from typing import Text, Union, Dict, Any, Optional, List
 
@@ -123,22 +124,74 @@ class TestCase(BaseModel):
     teardown: Union[Dict, Text, None]
 
 
+class NotificationType(Enum):
+    """ 自动化通知方式 """
+    DEFAULT = '0'
+    DING_TALK = '1'
+    WECHAT = '2'
+    EMAIL = '3'
+    FEI_SHU = '4'
+
+
+class DingTalk(BaseModel):
+    webhook: Union[Text, None]
+    secret: Union[Text, None]
+
+
+class Webhook(BaseModel):
+    webhook: Union[Text, None]
+
+
+class Email(BaseModel):
+    host: Union[Text, None]
+    port: Union[int, None]
+    user: Union[Text, None]
+    pwd: Union[Text, None]
+    sender: Union[Text, None]
+    receivers: Union[list, None]
+    receivers_list: Union[list, None]
+    to: Union[Text, None]
+
+
+class Host(BaseModel):
+    gateway_host: Union[Text, None]
+    lawyer_host: Union[Text, None]
+    callback_host: Union[Text, None]
+
+
+class MySqlDB(BaseModel):
+    switch: bool = False
+    db: Union[Text, None] = None
+    host: Union[Text, None] = None
+    user: Union[Text, None] = None
+    pwd: Union[Text, None] = None
+    port: Union[int, None] = 3306
+
+
+class RedisDB(BaseModel):
+    host: Union[Text, None] = None
+    pwd: Union[Text, None] = None
+    port: Union[int, None] = 6379
+    db: Union[Text, None] = None
+
+
 class Config(BaseModel):
-    info: Dict
-    mysql: Dict
-    redis: Dict
-    email: Dict
-    # tester_name: Text
-    # notification_type: Text = '0'
+    project_name: Union[Text, None]
+    env: Union[Text, None]
+    host: "Host"
+    tester_name: Union[Text, None]
+    notification_type: Text = '0'
     # excel_report: bool
-    # ding_talk: "DingTalk"
-    # mysql_db: "MySqlDB"
+    # 数据库
+    mysql: "MySqlDB"
+    redis: "RedisDB"
+    # 通知
+    ding_talk: "DingTalk"
+    wechat: "Webhook"
+    email: "Email"
     # mirror_source: Text
-    # wechat: "Webhook"
-    # email: "Email"
     # lark: "Webhook"
     # real_time_update_test_cases: bool = False
-    # host: Text
 
 
 class ResponseData(BaseModel):
@@ -204,8 +257,13 @@ class AllureAttachmentType(Enum):
     PDF = "pdf"
 
 
-class EmailInfo(BaseModel):
-    host: Text
-    port: int
-    user: Text
-    pwd: Text
+@dataclass
+class TestMetrics:
+    """ 用例执行数据 """
+    passed: int
+    failed: int
+    broken: int
+    skipped: int
+    total: int
+    pass_rate: float
+    time: Text

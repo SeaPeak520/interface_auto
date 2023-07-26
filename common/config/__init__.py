@@ -33,4 +33,8 @@ TEMPLATE_FILE = f'{CONFIG_DIR}testcase_template.py'
 # token文件
 TOKEN_FILE = f'{TESTDATA_DIR}token.json'
 
+ALLURE_DIR = f'{ROOT_DIR}report/allure_report/'
 
+ALLURE_TESTCASES = f'{ALLURE_DIR}data/test-cases/'
+
+ALLURE_SUMMARY = f'{ALLURE_DIR}widgets/summary.json'

@@ -1,32 +1,34 @@
-info:
-  project_name: xxx项目名称
-  env: 测试环境
-  host1: https://xx1.com
-  host2: https://xx2.com
-  host3: https://xx3.com
+project_name: xxx项目名称
+env: 测试环境
+tester_name: abc
 
+host:
+  gateway_host: https://xx1.com
+  lawyer_host: https://xx2.com
+  callback_host: https://xx3.com
+# 数据库相关配置
 mysql:
-  mysql_db_switch: true
-  test_db: db
-  test_host: host
-  test_port: 30001
-  test_user: root
-  test_pwd: 1234
-
+  switch: true
+  db: db
+  host: host
+  port: 30001
+  user: root
+  pwd: 1234
+# redis相关配置
 redis:
-  test_host: host
-  test_port: 30020
-  test_pwd: 1234
-  test_db: 0
-
+  host: host
+  port: 30020
+  pwd: 1234
+  db: 0
+# 邮箱相关配置
 email:
   host: 192.168.188.53
   port: 465
   user: user01@james.com
   password: user01
-  sender: 测试<user02@qq.com>
-  receivers: ['user02@james.com']
-  receivers_list: ['user02@james.com','user03@james.com']
+  sender: 测试<x@qq.com>
+  receivers: [ 'user02@james.com' ]
+  receivers_list: [ 'user02@james.com','user03@james.com' ]
   to: 自动化测试
 
 # 实时更新用例内容，False时，已生成的代码不会在做变更
@@ -35,9 +37,10 @@ real_time_update_test_cases: False
 
 # 报告通知类型：0: 不发送通知 1：钉钉 2：企业微信通知 3、邮箱通知 4、飞书通知
 # 支持同时发送多个通知，如多个，则用逗号分割， 如 1, 2
-notification_type: 0
+notification_type: 2
 # 收集失败的用例开关，整理成excel报告的形式，自动发送，目前只支持返送企业微信通知
 excel_report: False
+
 
 # 注意点：
 # 之前为了小伙伴们拉下代码执行的时候不受影响，企业微信、钉钉、邮箱的通知配置的都是我的
@@ -49,21 +52,14 @@ ding_talk:
   secret: SECdea6489dfcc3b9259da943c5ae38d3530696f2fa83ac72a9ee716e9511675b9b
 #  webhook:
 #  secret:
-# 数据库相关配置
-mysql_db:
-  # 数据库开关
-  switch: False
-  host:
-  user: root
-  password: '123456'
-  port: 3306
+
 
 # 镜像源
 mirror_source: http://mirrors.aliyun.com/pypi/simple/
 
 # 企业通知的相关配置
 wechat:
-  webhook: https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key:22748687-fa3b-4e48-a5d7-0502cef422b4
+  webhook: https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=413f6e2d-4a16-4598-b11c-40c1f54aa111
 
 
 ### 邮箱必填，需要全部都配置好，程序运行失败时，会发送邮件通知!!!!

@@ -110,19 +110,24 @@ class GetYamlCaseData(YamlHandler):
 
 
 # 获取某个目录下的所有yaml文件的路径
-def get_all_caseyaml(file_path):
+def get_all_caseyaml(file_path, is_yaml=True):
     yamlfile_path = []
     # 过滤掉在file_path中文件或目录
     target_list = ['pre', 'test.yaml', 'test_bbak.yaml', 'token.json']
     for name in os.listdir(file_path):  # ['Collect', 'pre', 'test1.yaml', 'test_bbak.yaml', 'token.json', 'UserInfo']
         if name not in target_list:
-            if name.endswith('.yaml'):
-                yamlfile_path.append(os.path.join(file_path, name))
+            # 获取yaml测试文件
+            if is_yaml:
+                if name.endswith('.yaml'):
+                    yamlfile_path.append(os.path.join(file_path, name))
+                else:
+                    for root, dirs, files in os.walk(os.path.join(file_path, name)):
+                        for _file_path in files:
+                            path = os.path.join(root, _file_path)
+                            yamlfile_path.append(ensure_path_sep(path))
+            # 获取allure报告的test-cases
             else:
-                for root, dirs, files in os.walk(os.path.join(file_path, name)):
-                    for _file_path in files:
-                        path = os.path.join(root, _file_path)
-                        yamlfile_path.append(ensure_path_sep(path))
+                yamlfile_path.append(os.path.join(file_path, name))
     return yamlfile_path
 
 

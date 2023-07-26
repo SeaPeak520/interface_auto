@@ -11,8 +11,8 @@ sys.path.append(os.path.dirname(sys.path[0]))
 
 
 class RedisHelper:
-    def __init__(self, host: str = config.redis['test_host'], port: int = config.redis['test_port'],
-                 pwd: str = config.redis['test_pwd'], db: str = config.redis['test_db']):
+    def __init__(self, host: str = config.redis.host, port: int = config.redis.port,
+                 pwd: str = config.redis.pwd, db: str = config.redis.db):
         self.__redis_pool = redis.ConnectionPool(host=host,
                                                  port=port,
                                                  password=pwd,

@@ -88,7 +88,7 @@ class RequestSend:
         """处理 sql 参数 ：数据库校验"""
         from common.utils import config
         # 数据库校验开关
-        if config.mysql['mysql_db_switch']:
+        if config.mysql.switch:
             # 判断database_assert_sql的类型是否为list类型（excel读取是str类型，判断第一个字符是否为'['）
             if self.__yaml_case.database_assert_sql and self.__yaml_case.database_assert_sql[0] == '[':
                 _database_assert_sql = ast.literal_eval(self.__yaml_case.database_assert_sql)

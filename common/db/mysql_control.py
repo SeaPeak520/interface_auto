@@ -17,11 +17,11 @@ sys.path.append(os.path.dirname(sys.path[0]))
 class MysqlDB:
     # 初始化
     def __init__(self):
-        self.conn = self.get_mysql_conn(config.mysql['test_host'],
-                                        int(config.mysql['test_port']),
-                                        config.mysql['test_user'],
-                                        config.mysql['test_pwd'],
-                                        config.mysql['test_db'])
+        self.conn = self.get_mysql_conn(config.mysql.host,
+                                        config.mysql.port,
+                                        config.mysql.user,
+                                        config.mysql.pwd,
+                                        config.mysql.db)
         self.cur = self.conn.cursor()
         self.log = LogHandler(os.path.basename(__file__))
 

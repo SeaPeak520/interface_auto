@@ -19,7 +19,7 @@ def database_sql_assert(func):
                 """处理 sql 参数 ：数据库校验"""
                 from common.utils import config
                 # 数据库校验开关
-                if config.mysql['mysql_db_switch']:
+                if config.mysql.switch:
                     # 判断database_assert_sql的类型是否为list类型（excel读取是str类型，判断第一个字符是否为'['）,及 非空处理
                     if res.yaml_database_assert_sql and res.yaml_database_assert_sql[0] == '[' and \
                             res.yaml_database_assert_sql[-1] == ']':
