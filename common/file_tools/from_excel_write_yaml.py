@@ -3,7 +3,7 @@ import json
 import os
 
 from common.config import TESTDATA_FILE, TESTDATA_DIR
-from common.exceptions.exceptions import ValueNotFoundError
+from common.exceptions.exceptions import ValueNullError
 from common.log.log_control import LogHandler
 from common.utils.dir_control import mk_dir, ensure_path_sep
 from common.utils.excel_control import ExcelHandler
@@ -49,7 +49,7 @@ class FromExcelWriteYaml:
         if not is_null and data or is_null:
             return data
         else:
-            raise ValueNotFoundError(f"{message}数据不能为空")
+            raise ValueNullError(f"{message}数据不能为空")
 
     @staticmethod
     def request_type_handler(headers=None):
@@ -77,7 +77,7 @@ class FromExcelWriteYaml:
             v_index = values.index(host)
             return "${{" + key[v_index] + "}}"
         else:
-            raise ValueNotFoundError(f"host: {host} ,配置文件没有对应的host参数")
+            raise ValueNullError(f"host: {host} ,配置文件没有对应的host参数")
 
     @staticmethod
     def data_handler_url(address):

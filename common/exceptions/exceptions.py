@@ -8,7 +8,7 @@ class MyBaseFailure(Exception):
 class JsonpathExtractionFailed(MyBaseFailure):
     pass
 
-
+#找不到
 class NotFoundError(MyBaseFailure):
     pass
 
@@ -36,6 +36,9 @@ class ValueTypeError(MyBaseFailure):
 class SendMessageError(MyBaseFailure):
     pass
 
-
+#值找不到
 class ValueNotFoundError(MyBaseFailure):
+    pass
+#值为空判断
+class ValueNullError(MyBaseFailure):
     pass
