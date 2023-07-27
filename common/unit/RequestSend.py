@@ -156,15 +156,14 @@ class RequestSend:
         """
         # 判断yaml文件的is_run参数是否执行用例
         if self.__yaml_case.is_run is True or self.__yaml_case.is_run is None:
-            # 非依赖要执行的接口时 执行前置条件
-            # if not dependence:
+            # 前置条件处理
             setup_handler(self.__yaml_case)
             # 如果有依赖数据统一在那边做处理，否则直接处理缓存
             if self.__yaml_case.dependence_case is True:
                 # 把self.__yaml_case传到DependentCase类处理，返回正则匹配到的数据
                 self.__yaml_case = DependentCase(self.__yaml_case).get_dependent_data()
             else:
-                # self.__yaml_case做缓存替换处理
+                # self.__yaml_case做缓存替换处理（防止没有依赖，但自身数据需要处理缓存）
                 self.__yaml_case = yaml_case_regular(self.__yaml_case)
 
             requests_type_mapping = {
