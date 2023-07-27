@@ -190,7 +190,7 @@ class RequestSend:
             )
         else:
             self.log.info(f'[{self.__yaml_case.remark}]用例不执行')
-            case_skip()
+            case_skip(self.__yaml_case)
 
 
 if __name__ == '__main__':

@@ -25,9 +25,7 @@ if __name__ == "__main__":
         "--reruns=2",
         "--reruns-delay=3",
         # "./test_case/xiaofa/RPA机器人自动拉群/test_automaticPullGroup_delete.py",
-        "./test_case/xiaofa/案源收藏/",
-        # f"{ROOT_DIR}test_case/xiaofa/抽盲盒活动/test_lottery_time.py",
-        # f"{ROOT_DIR}test_case/xiaofa/",
+        "./test_case/xiaofa/律师曝光/",
         "--alluredir=./report/allure_results",
         "--clean-alluredir"
     ]
@@ -37,18 +35,18 @@ if __name__ == "__main__":
     os.system(cmd)
 
     # 通知
-    allure_data = AllureFileClean().get_case_count()
-    notification_mapping = {
-        # 钉钉通知
-        NotificationType.DING_TALK.value: DingTalkSendMsg(allure_data).send_ding_notification,
-        # 企微通知
-        NotificationType.WECHAT.value: WeChatSend(allure_data).send_wechat_notification,
-        # 邮件通知
-        NotificationType.EMAIL.value: SendReport(allure_data).send
-        # NotificationType.FEI_SHU.value: FeiShuTalkChatBot(allure_data).post
-    }
-
-    if config.notification_type != NotificationType.DEFAULT.value:
-        notify_type = config.notification_type.split(",")
-        for i in notify_type:
-            notification_mapping.get(i.lstrip())()
+    # allure_data = AllureFileClean().get_case_count()
+    # notification_mapping = {
+    #     # 钉钉通知
+    #     NotificationType.DING_TALK.value: DingTalkSendMsg(allure_data).send_ding_notification,
+    #     # 企微通知
+    #     NotificationType.WECHAT.value: WeChatSend(allure_data).send_wechat_notification,
+    #     # 邮件通知
+    #     NotificationType.EMAIL.value: SendReport(allure_data).send
+    #     # NotificationType.FEI_SHU.value: FeiShuTalkChatBot(allure_data).post
+    # }
+    #
+    # if config.notification_type != NotificationType.DEFAULT.value:
+    #     notify_type = config.notification_type.split(",")
+    #     for i in notify_type:
+    #         notification_mapping.get(i.lstrip())()

@@ -43,6 +43,7 @@ def set_token():
         CacheHandler.update_cache(cache_name='token', value=token_dic['token'])
 
 
+
 def pytest_collection_modifyitems(items: List["Item"]) -> None:
     for item in items:
         item.name = item.name.encode('utf-8').decode('unicode-escape')
@@ -54,48 +55,32 @@ def pytest_collection_modifyitems(items: List["Item"]) -> None:
                 pattern = re.compile(regular_pattern)
                 item._nodeid = re.sub(pattern, f"[{str(value)}]", item._nodeid)  # 把host替换成config文件的值
         # item._nodeid = item.nodeid.encode('utf-8').decode('unicode-escape')
-#
-#     # 期望用例顺序
-#     # print("收集到的测试用例:%s" % items)
-#     appoint_items = ["test_get_user_info", "test_collect_addtool", "test_Cart_List", "test_ADD", "test_Guest_ADD",
-#                      "test_Clear_Cart_Item"]
-#
-#     # 指定运行顺序
-#     run_items = []
-#     for i in appoint_items:
-#         for item in items:
-#             module_item = item.name.split("[")[0]
-#             if i == module_item:
-#                 run_items.append(item)
-#
-#     for i in run_items:
-#         run_index = run_items.index(i)
-#         items_index = items.index(i)
-#
-#         if run_index != items_index:
-#             n_data = items[run_index]
-#             run_index = items.index(n_data)
-#             items[items_index], items[run_index] = items[run_index], items[items_index]
+
+    # 期望用例顺序
+    # test_updatelawyerrelease 为用例名称，py文件里的函数
+    # 例 ：appoint_items = ["test_updatelawyerrelease"]
+    appoint_items = []
+
+    # 指定运行顺序
+    # items = [<Function test_deletelawyerrelease[删除曝光接口]>, <Function test_getlawyerreleaselistbyh5[小程序查询接口]>]
+    run_items = []     # [<Function test_updatelawyerrelease[更新小法律师曝光]>]
+    for i in appoint_items:
+        for item in items:
+            module_item = item.name.split("[")[0]
+            if i == module_item:
+                run_items.append(item)
+
+    for i in run_items:
+        run_index = run_items.index(i)   #0 在run_items里的索引
+        items_index = items.index(i)    #5  在item里的索引
+        #期待运行索引与实际运行索引不同，则替换执行位置
+        if run_index != items_index:
+            items[items_index], items[run_index] = items[run_index], items[items_index]
 
 
 # def pytest_configure(config):
 #     config.addinivalue_line("markers", 'smoke')
 #     config.addinivalue_line("markers", '回归测试')
-
-
-# def case_skip():
-#     """处理跳过用例"""
-#     pytest.skip()
-# in_data = TestCase(**in_data)
-# if ast.literal_eval(cache_regular(str(in_data.is_run))) is False:
-#     allure.dynamic.title(in_data.detail)
-#     allure_step_no(f"请求URL: {in_data.is_run}")
-#     allure_step_no(f"请求方式: {in_data.method}")
-#     allure_step("请求头: ", in_data.headers)
-#     allure_step("请求数据: ", in_data.data)
-#     allure_step("依赖数据: ", in_data.dependence_case_data)
-#     allure_step("预期数据: ", in_data.assert_data)
-
 
 # 如果使用多线程会有统计问题
 def pytest_terminal_summary(terminalreporter):
