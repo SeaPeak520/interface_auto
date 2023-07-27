@@ -3,6 +3,7 @@ import json
 import os
 
 from common.config import TESTDATA_FILE, TESTDATA_DIR
+from common.exceptions.exceptions import ValueNotFoundError
 from common.log.log_control import LogHandler
 from common.utils.dir_control import mk_dir, ensure_path_sep
 from common.utils.excel_control import ExcelHandler
@@ -10,14 +11,14 @@ from common.utils.file_control import create_file
 from common.utils.yaml_control import YamlHandler
 
 
-class FromExcelWriteYaml():
+class FromExcelWriteYaml:
     def __init__(self):
         # 创建日志对象
         self.log = LogHandler(os.path.basename(__file__))
         # 创建excel对象
         self.excel_handle = ExcelHandler(TESTDATA_FILE)
 
-    # 获取测试文件的sheet名称列表 ['xiaofa', 'Sheet4']
+    # 获取测试文件的sheet名称列表 ['iarna', 'Sheet4']
     @property
     def get_sheet(self):
         return self.excel_handle.get_sheet
@@ -48,7 +49,7 @@ class FromExcelWriteYaml():
         if not is_null and data or is_null:
             return data
         else:
-            raise BaseException(f"{message}数据不能为空")
+            raise ValueNotFoundError(f"{message}数据不能为空")
 
     @staticmethod
     def request_type_handler(headers=None):
@@ -69,14 +70,14 @@ class FromExcelWriteYaml():
         """解析地址映射配置文件的host参数并提取"""
         from common.utils import config
         host = address.split('.com')[0] + '.com'
-        if config.host.gateway_host in host:
-            return "${{gateway_host}}"
-        elif config.host.lawyer_host in host:
-            return "${{lawyer_host}}"
-        elif config.host.callback_host in host:
-            return "${{callback_host}}"
+        host_list = config.host.dict()
+        if any(i == host for i in host_list.values()):
+            key = list(host_list.keys())
+            values = list(host_list.values())
+            v_index = values.index(host)
+            return "${{" + key[v_index] + "}}"
         else:
-            raise BaseException(f"host: {host} ,配置文件没有对应的host参数")
+            raise ValueNotFoundError(f"host: {host} ,配置文件没有对应的host参数")
 
     @staticmethod
     def data_handler_url(address):
