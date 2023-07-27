@@ -82,6 +82,7 @@ class Context:
     @classmethod
     def host(cls, value) -> str:
         """ 获取接口域名 """
+        from common.utils import config
         return eval(f"config.host.{value}")
 
 
