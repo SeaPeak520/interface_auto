@@ -92,14 +92,6 @@ class CaseDataCheck:
         )
 
     @property
-    def get_database_assert_sql(self) -> Union[list, Text, None]:
-        return self.case_data.get(TestCaseEnum.DATABASE_ASSERT_SQL.value[0])
-
-    @property
-    def get_database_assert_result(self) -> Union[list, Text, None]:
-        return self.case_data.get(TestCaseEnum.DATABASE_ASSERT_RESULT.value[0])
-
-    @property
     def get_dependence_case_data(self):
         if _dep_data := self.case_data.get(TestCaseEnum.DE_CASE.value[0]):
             assert self.case_data.get(TestCaseEnum.DE_CASE_DATA.value[0]) is not None, (
@@ -131,6 +123,7 @@ class CaseData(CaseDataCheck):
                 # 检查model参数是否在测试用例中
                 super().check_params_exit()
                 _case_data = {
+                    'case_id': key,
                     'method': self.get_method,
                     'is_run': self.case_data.get(TestCaseEnum.IS_RUN.value[0]),
                     'url': self.get_host,
@@ -141,10 +134,11 @@ class CaseData(CaseDataCheck):
                     'dependence_case': self.case_data.get(TestCaseEnum.DE_CASE.value[0]),
                     'dependence_case_data': self.get_dependence_case_data,
                     'setup_sql': self.case_data.get(TestCaseEnum.SETUP_SQL.value[0]),
-                    # "current_request_set_cache": self.case_data.get(TestCaseEnum.CURRENT_RE_SET_CACHE.value[0]),
-                    "database_assert_sql": self.get_database_assert_sql,
-                    "database_assert_result": self.get_database_assert_result,
+                    "database_assert_sql": self.case_data.get(TestCaseEnum.DATABASE_ASSERT_SQL.value[0]),
+                    "database_assert_result": self.case_data.get(TestCaseEnum.DATABASE_ASSERT_RESULT.value[0]),
                     "assert_data": self.get_assert,
+                    "current_request_set_cache": self.case_data.get(TestCaseEnum.CURRENT_RE_SET_CACHE.value[0]),
+                    "teardown_sql": self.case_data.get(TestCaseEnum.TEARDOWN_SQL.value[0]),
                     # "sleep": self.case_data.get(TestCaseEnum.SLEEP.value[0]),
                     "teardown": self.case_data.get(TestCaseEnum.TEARDOWN.value[0])
                 }

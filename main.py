@@ -15,39 +15,40 @@ if __name__ == "__main__":
     # 读取excel生成yaml用例
     FromExcelWriteYaml().write_yaml()
 
-    # 通过yaml用例生成py测试用例
-    #write_testcase()
+    #通过yaml用例生成py测试用例
+    write_testcase()
 
-    # 执行用例
-    # args = [
-    #     "-s",
-    #     "-v",
-    #     # "-n=2",  # 收集用例结果会出现重复执行的问题
-    #     "--reruns=2",
-    #     "--reruns-delay=3",
-    #     # "./test_case/xiaofa/RPA机器人自动拉群/test_automaticPullGroup_delete.py",
-    #     "./test_case/xiaofa/律师曝光/",
-    #     "--alluredir=./report/allure_results",
-    #     "--clean-alluredir"
-    # ]
-    # pytest.main(args)
-    # # 生成allure报告
-    # cmd = "allure generate ./report/allure_results -o ./report/allure_report -c ./report/allure_report"
-    # os.system(cmd)
+    #执行用例
+    args = [
+        "-s",
+        "-v",
+        #"-n=2",  # 收集用例结果会出现重复执行的问题
+        "--reruns=2",
+        "--reruns-delay=3",
+        #"./test_case/xiaofa/案源收藏/test_caseCollectAdd.py",
+        "./test_case/xiaofa/小法法/",
+        "--alluredir=./report/allure_results",
+        "--clean-alluredir"
+    ]
+    pytest.main(args)
+
+    # 生成allure报告
+    cmd = "allure generate ./report/allure_results -o ./report/allure_report -c ./report/allure_report"
+    os.system(cmd)
 
     # 通知
-    # allure_data = AllureFileClean().get_case_count()
-    # notification_mapping = {
-    #     # 钉钉通知
-    #     NotificationType.DING_TALK.value: DingTalkSendMsg(allure_data).send_ding_notification,
-    #     # 企微通知
-    #     NotificationType.WECHAT.value: WeChatSend(allure_data).send_wechat_notification,
-    #     # 邮件通知
-    #     NotificationType.EMAIL.value: SendReport(allure_data).send
-    #     # NotificationType.FEI_SHU.value: FeiShuTalkChatBot(allure_data).post
-    # }
-    #
-    # if config.notification_type != NotificationType.DEFAULT.value:
-    #     notify_type = config.notification_type.split(",")
-    #     for i in notify_type:
-    #         notification_mapping.get(i.strip())()
+    allure_data = AllureFileClean().get_case_count()
+    notification_mapping = {
+        # 钉钉通知
+        NotificationType.DING_TALK.value: DingTalkSendMsg(allure_data).send_ding_notification,
+        # 企微通知
+        NotificationType.WECHAT.value: WeChatSend(allure_data).send_wechat_notification,
+        # 邮件通知
+        NotificationType.EMAIL.value: SendReport(allure_data).send
+        # NotificationType.FEI_SHU.value: FeiShuTalkChatBot(allure_data).post
+    }
+
+    if config.notification_type != NotificationType.DEFAULT.value:
+        notify_type = config.notification_type.split(",")
+        for i in notify_type:
+            notification_mapping.get(i.strip())()

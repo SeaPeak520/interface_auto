@@ -15,7 +15,8 @@ class DependentCase:
     """ 处理依赖相关的业务 """
 
     def __init__(self, dependent_yaml_case):
-        self.__yaml_case = dependent_yaml_case
+        self._yaml_case = dependent_yaml_case
+        self.__yaml_case = TestCase(**self._yaml_case)
         self.log = LogHandler(os.path.basename(__file__))
 
     @classmethod
@@ -100,17 +101,53 @@ class DependentCase:
         @return:
         """
         # 判断依赖数据类型，依赖 sql中的数据
-        _dependent_sql = dependent_data.dependent_sql  # list or str or None
+        from common.db.mysql_control import SqlHandler
+        s = SqlHandler()
+        _dependent_sql = self.__yaml_case.setup_sql  # list or str or None
         _set_cache = self.set_cache_value(dependent_data)  # list or str or None
         if not _dependent_sql:
             raise ValueError("关联sql数据为空，请检查！")
-        if isinstance(_dependent_sql, list) and isinstance(_set_cache, list) and len(_set_cache) == len(_dependent_sql):
-            for k, v in enumerate(_dependent_sql):
-                self.cache_by_sql(v, _set_cache[k])
-        elif isinstance(_dependent_sql, str) and isinstance(_set_cache, str):
-            self.cache_by_sql(_dependent_sql, _set_cache)
+        if isinstance(_dependent_sql, list):
+            if isinstance(_set_cache, list) and len(_set_cache) == len(_dependent_sql):
+                for k, v in enumerate(_dependent_sql):
+                    self.cache_by_sql(v, _set_cache[k])
+            else:
+                for i in _dependent_sql:
+                    s.execution_by_sql_type(i)
+        elif isinstance(_dependent_sql, str):
+            if isinstance(_set_cache, str):
+                self.cache_by_sql(_dependent_sql, _set_cache)
+            else:
+                s.execution_by_sql_type(_dependent_sql)
         else:
             raise ValueTypeError(f"传入数据类型不正确，接受的是list或str: {_dependent_sql}, {_set_cache}")
+    @staticmethod
+    def _dependent_type_for_response(_set_cache, _jsonpath, res):
+
+        if isinstance(_set_cache, list) and isinstance(_jsonpath, list) and len(
+                _set_cache) == len(_jsonpath):
+            for k, v in enumerate(_set_cache):
+                # 从res通过jsonpath获取结果
+                _set_value = get_value(res, _jsonpath[k])[0]
+                CacheHandler.update_cache(cache_name=v, value=_set_value)
+        elif isinstance(_set_cache, str) and isinstance(_jsonpath, str):
+            _set_value = get_value(res, _jsonpath)[0]
+            CacheHandler.update_cache(cache_name=_set_cache, value=_set_value)
+        else:
+            raise ValueTypeError(
+                f"传入数据类型不正确，接受的是list或str: _jsonpath: {_set_cache}, _jsonpath: {_jsonpath}")
+
+    def only_sql(self):
+        from common.db.mysql_control import SqlHandler
+        s = SqlHandler()
+        setup_sql = self.__yaml_case.setup_sql
+        if isinstance(setup_sql, list):
+            for i in setup_sql:
+                s.execution_by_sql_type(i)
+        elif isinstance(setup_sql, str) and setup_sql[0] != '[':
+            s.execution_by_sql_type(setup_sql)
+        else:
+            raise ValueTypeError(f"传入数据类型不正确，接受的是list或str: {setup_sql}")
 
     def is_dependent(self) -> None:
         """
@@ -119,71 +156,69 @@ class DependentCase:
         """
         # 获取用例中的dependent_type值，判断该用例是否需要执行依赖
         _dependent_type = self.__yaml_case.dependence_case
-        # 判断是否有依赖
-        if _dependent_type is True:
-            # 获取依赖用例数据
-            _dependence_case_dates = self.__yaml_case.dependence_case_data
-            # 循环所有需要依赖的数据
-            try:
-                for dependence_case_data in _dependence_case_dates:
-                    # case_id='caseCollectConcel' dependent_data=[DependentData(dependent_type='response', jsonpath='$.code', set_cache='login_02_v_code'), DependentData(dependent_type='response', jsonpath='$.message', set_cache='login_02_v_message')]
-                    # case_id='self' dependent_data=[DependentData(dependent_type='sqlData', jsonpath='$.code', set_cache='login_02_v_code')]
-                    _case_id = dependence_case_data.case_id  # 依赖用例
-                    dependent_data = dependence_case_data.dependent_data
-                    # 判断依赖数据为sql，case_id需要写成self，否则程序中无法获取case_id
-                    if _case_id == 'self':
-                        for i in dependent_data:
-                            self._dependent_type_for_sql(
-                                dependent_data=i)
-                    elif dependent_data is not None:
-                        for i in dependent_data:
-                            if i.dependent_type == DependentType.RESPONSE.value:
+        # is_retry用来判断失败重试避免重复执行所有依赖sql或请求
+        if not self.__yaml_case.is_retry:
+            # 当dependence_case为空时
+            if not _dependent_type or _dependent_type is False:
+                # 当前置sql不为空，只执行sql
+                if self.__yaml_case.setup_sql:
+                    self.only_sql()
+            # 当dependence_case不为空时
+            # 判断是否有依赖
+            if _dependent_type is True:
+                # 获取依赖用例数据
+                _dependence_case_dates = self.__yaml_case.dependence_case_data
+                # 循环所有需要依赖的数据
+                try:
+                    for dependence_case_data in _dependence_case_dates:
+                        # case_id='caseCollectConcel' dependent_data=[DependentData(dependent_type='response', jsonpath='$.code', set_cache='login_02_v_code'), DependentData(dependent_type='response', jsonpath='$.message', set_cache='login_02_v_message')]
+                        # case_id='self' dependent_data=[DependentData(dependent_type='sqlData', jsonpath='$.code', set_cache='login_02_v_code')]
+                        _case_id = dependence_case_data.case_id  # 依赖用例
+                        dependent_data = dependence_case_data.dependent_data
+                        # 判断依赖数据为sql，case_id需要写成self，否则程序中无法执行sql
+                        if _case_id == 'self':
+                            for i in dependent_data:
+                                self._dependent_type_for_sql(
+                                    dependent_data=i)
+                        elif dependent_data is not None:
+                            for i in dependent_data:
                                 # 获取dependent_data中set_cache的值
                                 _set_cache = self.set_cache_value(i)
                                 # 获取dependent_data中set_cache的值  list
                                 _replace_key = self.replace_key(i)
 
                                 _jsonpath = i.jsonpath
-
-                                res = self.response_by_case_id(_case_id, _replace_key)
-
-                                if isinstance(_set_cache, list) and isinstance(_jsonpath, list) and len(
-                                        _set_cache) == len(_jsonpath):
-                                    for k, v in enumerate(_set_cache):
-                                        # 从res通过jsonpath获取结果
-                                        _set_value = get_value(res, _jsonpath[k])[0]
-                                        CacheHandler.update_cache(cache_name=v, value=_set_value)
-                                elif isinstance(_set_cache, str) and isinstance(_jsonpath, str):
-                                    _set_value = get_value(res, _jsonpath)[0]
-                                    CacheHandler.update_cache(cache_name=_set_cache, value=_set_value)
+                                # 执行依赖用例，并从依赖接口返回结果获取数据
+                                if i.dependent_type == DependentType.RESPONSE.value:
+                                    # 发起请求
+                                    res = self.response_by_case_id(_case_id, _replace_key)
+                                    self._dependent_type_for_response(_set_cache, _jsonpath, res)
+                                # sqlData
+                                # 执行依赖用例，并从执行sql
+                                elif i.dependent_type == DependentType.SQL_DATA.value:
+                                    self.response_by_case_id(_case_id, _replace_key)
+                                    self._dependent_type_for_sql(
+                                        dependent_data=i)
+                                # request 只执行依赖用例
+                                elif i.dependent_type == DependentType.REQUEST.value:
+                                    self.response_by_case_id(_case_id, _replace_key)
                                 else:
-                                    raise ValueTypeError(
-                                        f"传入数据类型不正确，接受的是list或str: _jsonpath: {_set_cache}, _jsonpath: {_jsonpath}")
-                            # sqlData
-                            elif i.dependent_type == DependentType.SQL_DATA.value:
-                                _replace_key = self.replace_key(i)
-                                self.response_by_case_id(_case_id, _replace_key)
-                                self._dependent_type_for_sql(
-                                    dependent_data=i)
-                            # request 只请求
-                            elif i.dependent_type == DependentType.REQUEST.value:
-                                _replace_key = self.replace_key(i)
-                                self.response_by_case_id(_case_id, _replace_key)
-                            else:
-                                raise ValueError(
-                                    "依赖的dependent_type不正确，只支持request、response、sql依赖\n"
-                                    f"当前填写内容: {i.dependent_type}"
-                                )
-            except KeyError as exc:
-                raise ValueNotFoundError(
-                    f"dependence_case_data依赖用例中，未找到 {exc} 参数，请检查是否填写"
-                    f"如已填写，请检查是否存在yaml缩进问题"
-                ) from exc
-            except TypeError as exc:
-                raise ValueNotFoundError(
-                    "dependence_case_data下的所有内容均不能为空！"
-                    "请检查相关数据是否填写，如已填写，请检查缩进问题"
-                ) from exc
+                                    raise ValueError(
+                                        "依赖的dependent_type不正确，只支持request、response、sql依赖\n"
+                                        f"当前填写内容: {i.dependent_type}"
+                                    )
+                except KeyError as exc:
+                    raise ValueNotFoundError(
+                        f"dependence_case_data依赖用例中，未找到 {exc} 参数，请检查是否填写"
+                        f"如已填写，请检查是否存在yaml缩进问题"
+                    ) from exc
+                except TypeError as exc:
+                    raise ValueNotFoundError(
+                        "dependence_case_data下的所有内容均不能为空！"
+                        "请检查相关数据是否填写，如已填写，请检查缩进问题"
+                    ) from exc
+            self._yaml_case['is_retry'] = True
+            CacheHandler.update_cache(cache_name=self.__yaml_case.case_id, value=self._yaml_case)
 
     def get_dependent_data(self) -> "TestCase":
         """

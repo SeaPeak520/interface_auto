@@ -35,7 +35,7 @@ class FromExcelWriteYaml:
 
     @staticmethod
     def data_convert(data):
-        """数据判空处理并使用ast.literal_eval转换格式"""
+        """数据判空处理并使用ast.literal_eval转换格式，前后置sql字符串转换成列表"""
         return ast.literal_eval(data) if data else None
 
     @staticmethod
@@ -46,10 +46,11 @@ class FromExcelWriteYaml:
     @staticmethod
     def judge_is_null(data, is_null=False, message=''):
         """数据是否允许为空，默认不能为空"""
-        if not is_null and data or is_null:
-            return data
-        else:
-            raise ValueNullError(f"{message}数据不能为空")
+        try:
+            if not is_null and data or is_null:
+                return data
+        except ValueNullError as e:
+            raise f"{message}数据不能为空： {e}"
 
     @staticmethod
     def request_type_handler(headers=None):
@@ -178,6 +179,8 @@ class FromExcelWriteYaml:
                                 "database_assert_sql": None,
                                 "database_assert_result": None,
                                 "assert_data": None,
+                                "current_request_set_cache": None,
+                                "teardown_sql": None,
                                 "teardown": None
                             }
                             # 关联数据处理
@@ -215,25 +218,20 @@ class FromExcelWriteYaml:
                                 info_case['assert_data'] = assert_data
 
                             #######3、前置数据处理
-                            if setup_execute_sql := function_data_value['前置条件(要执行的sql)']:
-                                if setup_execute_sql := self.data_convert(setup_execute_sql):
-                                    info_case['setup_sql'] = setup_execute_sql
+                            if setup_execute_sql := self.data_convert(function_data_value['前置条件(要执行的sql)']):
+                                info_case['setup_sql'] = setup_execute_sql
 
-                            #######4、后置数据处理
-                            teardown_execute_sql = function_data_value['后置条件(要执行的sql)']
-                            teardown_to_params = function_data_value['后置条件(需要把响应参数拼接到sql)']
+                            #######4、请求或响应设置缓存
+                            if current_request_set_cache := self.data_handler_dict(function_data_value['将请求或响应设置缓存']):
+                                info_case['current_request_set_cache'] = current_request_set_cache
 
-                            teardown_data = {}
-                            if teardown_execute_sql or teardown_to_params:
-                                # 后置-执行sql处理
-                                if teardown_execute_sql := self.data_convert(teardown_execute_sql):
-                                    teardown_data['sql'] = teardown_execute_sql
-                                # 后置-需要把响应参数拼接到sql处理
-                                if teardown_to_params := self.data_handler_dict(teardown_to_params):
-                                    teardown_data['is_params'] = teardown_to_params
+                            #######5、后置数据处理
+                            # 后置-执行sql处理
+                            if teardown_sql := self.data_convert(function_data_value['后置条件(要执行的sql)']):
+                                info_case['teardown_sql'] = teardown_sql
 
-                            if teardown_data:
-                                info_case['teardown'] = teardown_data
+                            if teardown := self.data_handler_dict(function_data_value['后置条件(执行接口)']):
+                                info_case['teardown'] = teardown
 
                             # 把info信息写入case中
                             case_data[function_data_value['用例名称'].split('test_')[-1]] = info_case

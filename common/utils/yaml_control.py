@@ -138,4 +138,4 @@ if __name__ == '__main__':
     path = f'{TESTDATA_DIR}xiaofa/案源收藏/caseCollectAdd.yaml'
 
     a = GetYamlCaseData(path).get_yaml_case_data()
-    print(a)
+    print(type(a['caseCollectAdd']['requestData']))

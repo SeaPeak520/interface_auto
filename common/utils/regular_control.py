@@ -7,6 +7,7 @@ import re
 from common.utils.models import TestCase
 
 
+
 class Context:
     """ 正则替换 """
 
@@ -153,7 +154,42 @@ def cache_regular(target: str) -> str:
         log.error("yaml中的 ${{}} 函数方法不正确，正确语法实例：$cache{login_init}")
         raise
 
-
+def teardown_regular(target: str) -> str:
+    """
+    用于解析测试用例数据时
+    使用正则替换缓存数据
+    $td{login_init}  $td{int:login_init}
+    :param target: 用例数据，str格式
+    str类型或json类型 的用例数据
+    :return:
+    getattr(Context(), func_name)(value_name) 执行Context类的 func_name函数，传入value_name
+    """
+    from common.log.log_control import LogHandler
+    from common.utils.cache_control import CacheHandler
+    log = LogHandler(os.path.basename(__file__))
+    try:
+        # 正则获取 $cache{login_init}中的值 --> login_init
+        regular_pattern = r"\$td\{(.*?)\}"
+        if key_list := re.findall(regular_pattern, target):  # 正则匹配到的值集合['login_init'] #int:login_init
+            value_types = ['int:', 'bool:', 'list:', 'dict:', 'tuple:', 'float:']
+            for key in key_list:
+                if any(i in key for i in value_types) is True:
+                    value_type = key.split(":")[0]
+                    regular_data = key.split(":")[1]
+                    pattern = re.compile(r'\'\$td\{' + value_type + ":" + regular_data + r'\}\'')
+                    cache_data = eval(f"{value_type}({CacheHandler.get_cache(regular_data)})")
+                else:
+                    pattern = re.compile(r'\$td\{' + key + r'\}')
+                    cache_data = CacheHandler.get_cache(key)
+                # 使用sub方法，替换已经拿到的内容
+                target = re.sub(pattern, str(cache_data), target)
+        return target
+    except AttributeError:
+        log.error(f"未找到对应的替换的数据, 请检查数据是否正确 {target}")
+        raise
+    except IndexError:
+        log.error("yaml中的 ${{}} 函数方法不正确，正确语法实例：$td{login_init}")
+        raise
 def yaml_case_regular(yaml_case) -> "TestCase":
     """
     没有依赖，直接进行缓存替换

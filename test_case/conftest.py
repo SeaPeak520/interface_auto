@@ -54,7 +54,7 @@ def pytest_collection_modifyitems(items: List["Item"]) -> None:
                 value = key.encode('utf-8').decode('unicode-escape')
                 pattern = re.compile(regular_pattern)
                 item._nodeid = re.sub(pattern, f"[{str(value)}]", item._nodeid)  # 把host替换成config文件的值
-        # item._nodeid = item.nodeid.encode('utf-8').decode('unicode-escape')
+        #item._nodeid = item.nodeid.encode('utf-8').decode('unicode-escape')
 
     # 期望用例顺序
     # test_updatelawyerrelease 为用例名称，py文件里的函数

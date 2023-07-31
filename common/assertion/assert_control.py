@@ -92,10 +92,6 @@ class AssertUtil:
         """
         load_module_functions(assert_type)[get_type](check_value, expect_value, str(message))
 
-    @property
-    def get_response_data(self):
-        return json.loads(self.response_data)
-
     @staticmethod
     def get_message(get_assert_data):
         """
@@ -117,9 +113,9 @@ class AssertUtil:
         通过$.code使用jsonpath获取到response的数据
         :return:
         """
-        resp_data = get_value(self.get_response_data, self.get_jsonpath(get_assert_data))
+        resp_data = get_value(self.response_data, self.get_jsonpath(get_assert_data))
         assert resp_data is not False, (
-            f"jsonpath数据提取失败，提取对象: {self.get_response_data} , 当前语法: {self.get_jsonpath(get_assert_data)}"
+            f"jsonpath数据提取失败，提取对象: {self.response_data} , 当前语法: {self.get_jsonpath(get_assert_data)}"
         )
         return resp_data if len(resp_data) > 1 else resp_data[0]
 

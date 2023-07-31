@@ -17,13 +17,13 @@ sys.path.append(os.path.dirname(sys.path[0]))
 class MysqlDB:
     # 初始化
     def __init__(self):
+        self.log = LogHandler(os.path.basename(__file__))
         self.conn = self.get_mysql_conn(config.mysql.host,
                                         config.mysql.port,
                                         config.mysql.user,
                                         config.mysql.pwd,
                                         config.mysql.db)
         self.cur = self.conn.cursor()
-        self.log = LogHandler(os.path.basename(__file__))
 
     # 释放资源
     def __del__(self):
@@ -33,7 +33,7 @@ class MysqlDB:
             # 关闭连接
             self.conn.close()
         except AttributeError as error:
-            self.log.error("数据库关闭失败，失败原因 %s", error)
+            self.log.error(f"数据库关闭失败，失败原因 {error}", )
 
     def get_mysql_conn(self, host: str, port: int, user: str, pwd: str, db: str):
         """
@@ -178,4 +178,4 @@ if __name__ == "__main__":
     ss_sql = "select * from table where user_id=1 and case_id=1;"
     # sqkl = ["select * from "]
     s = SqlHandler()
-    print(s.sql_handle(_sql, state='num'))
+    print(s.sql_handle(ss_sql, state='num'))

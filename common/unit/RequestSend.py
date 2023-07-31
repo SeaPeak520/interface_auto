@@ -1,4 +1,5 @@
 import ast
+import json
 import os
 import sys
 from typing import Dict, Text
@@ -17,7 +18,7 @@ from common.decorator.teardown_decorator import teardown_decorator
 from common.log.log_control import LogHandler
 from common.unit import case_skip
 from common.unit.dependent_case import DependentCase
-from common.unit.setup_control import setup_handler
+from common.unit.set_current_request_cache import SetCurrentRequestCache
 from common.utils.models import TestCase, RequestType, ResponseData
 from common.utils.regular_control import yaml_case_regular
 
@@ -28,6 +29,7 @@ class RequestSend:
     def __init__(self, yaml_case):
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         self.log = LogHandler(os.path.basename(__file__))
+        self._yaml_case = yaml_case
         self.__yaml_case = TestCase(**yaml_case)
         self.mysql = SqlHandler()
 
@@ -128,7 +130,7 @@ class RequestSend:
             "req_headers": res.request.headers,
 
             "res_assert_result": None,
-            "res_data": res.text,
+            "res_data": json.loads(res.text),
             "res_cookie": res.cookies,
             "res_time": self.response_elapsed_total_seconds(res),
             "res_status_code": res.status_code,
@@ -156,12 +158,16 @@ class RequestSend:
         """
         # 判断yaml文件的is_run参数是否执行用例
         if self.__yaml_case.is_run is True or self.__yaml_case.is_run is None:
-            # 前置条件处理
-            setup_handler(self.__yaml_case)
+            # 前置条件处理,is_return用来判断失败重试避免重复执行前置sql
+            # if not self.__yaml_case.is_retry:
+            #     setup_handler(self.__yaml_case)
+            #     self._yaml_case['is_retry'] = True
+            #     CacheHandler.update_cache(cache_name=self.__yaml_case.case_id, value=self._yaml_case)
+
             # 如果有依赖数据统一在那边做处理，否则直接处理缓存
-            if self.__yaml_case.dependence_case is True:
+            if self.__yaml_case.dependence_case is True or self.__yaml_case.setup_sql:
                 # 把self.__yaml_case传到DependentCase类处理，返回正则匹配到的数据
-                self.__yaml_case = DependentCase(self.__yaml_case).get_dependent_data()
+                self.__yaml_case = DependentCase(self._yaml_case).get_dependent_data()
             else:
                 # self.__yaml_case做缓存替换处理（防止没有依赖，但自身数据需要处理缓存）
                 self.__yaml_case = yaml_case_regular(self.__yaml_case)
@@ -174,12 +180,17 @@ class RequestSend:
                 # RequestType.NONE.value: self.request_type_for_none,
                 # RequestType.EXPORT.value: self.request_type_for_export
             }
+
             # requests_type_mapping.get(self._yaml_case.requestType) 执行的函数，比如JSON，执行request_type_for_json的函数
             res = requests_type_mapping.get(self.__yaml_case.requestType)(
                 headers=self.__yaml_case.headers,
                 method=self.__yaml_case.method,
                 **kwargs
             )
+            # 将请求或响应设置缓存：
+            if current_request_set_cache := self.__yaml_case.current_request_set_cache:
+                SetCurrentRequestCache(current_request_set_cache, self.__yaml_case.requestData, res).set_caches_main()
+
             # 判断用例关联依赖，不执行装饰器
             return (
                 self._check_params(

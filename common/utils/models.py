@@ -92,7 +92,6 @@ class DependentType(Enum):
 
 class DependentData(BaseModel):
     dependent_type: Text
-    dependent_sql: Union[Text, None, list]
     jsonpath: Union[Text, None, list]
     set_cache: Union[Text, None, list]
     replace_key: Union[Dict, None]
@@ -100,15 +99,24 @@ class DependentData(BaseModel):
 
 class DependentCaseData(BaseModel):
     case_id: Text
-    # dependent_data: List[DependentData]
     dependent_data: Union[None, List[DependentData]] = None
 
 
+class TeardownData(BaseModel):
+    case_id: Union[None, Text]
+    replace_key: Union[None, Dict]
+
+class CurrentRequestSetCache(BaseModel):
+    type: Text
+    jsonpath: Union[Text, List]
+    set_cache: Union[Text, List]
+
+
 class TestCase(BaseModel):
+    case_id: Text
     url: Text
     method: Text
     remark: Text
-    # assert_data: Union[Dict, Text] = Field(..., alias="assert")
     is_run: Optional[bool]
     headers: Union[None, Dict, Text]
     requestType: Text
@@ -119,9 +127,12 @@ class TestCase(BaseModel):
     database_assert_sql: Union[list, Text, None]
     database_assert_result: Union[list, Text, None]
     assert_data: Union[Dict, Text, None]
-    # current_request_set_cache: Optional[List["CurrentRequestSetCache"]]
-    # sleep: Optional[Union[int, float]]
-    teardown: Union[Dict, Text, None]
+    current_request_set_cache: Optional[List["CurrentRequestSetCache"]]
+    teardown_sql: Optional[List] = None
+    teardown: Optional[Union[None, List["TeardownData"], Text]] = None
+    #sleep: Optional[Union[int, float]]
+    is_retry: bool = None
+
 
 
 class NotificationType(Enum):
