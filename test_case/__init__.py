@@ -2,9 +2,9 @@
 # -*- coding: utf-8 -*-
 
 from common.config import TESTDATA_DIR
-from common.file_tools.get_yaml_data_analysis import CaseData
-from common.utils.cache_control import CacheHandler, _cache_config
-from common.utils.yaml_control import get_all_caseyaml
+from utils.file_tools.get_yaml_data_analysis import CaseData
+from utils.cache.cache_control import CacheHandler, _cache_config
+from utils.other.yaml_control import get_all_caseyaml
 
 
 def write_case_process():

@@ -1,14 +1,14 @@
 import os
 import pytest
 
-from common.allure.allure_report_data import AllureFileClean
-from common.file_tools.from_excel_write_yaml import FromExcelWriteYaml
-from common.file_tools.from_yaml_write_case import write_testcase
-from common.notification.ding_talk import DingTalkSendMsg
-from common.notification.email_control import SendReport
-from common.notification.wechat_send import WeChatSend
-from common.utils import config
-from common.utils.models import NotificationType
+from utils.allure.allure_report_data import AllureFileClean
+from utils.file_tools.from_excel_write_yaml import FromExcelWriteYaml
+from utils.file_tools.from_yaml_write_case import write_testcase
+from utils.notification.ding_talk import DingTalkSendMsg
+from utils.notification.email_control import SendReport
+from utils.notification.wechat_send import WeChatSend
+from utils import config
+from utils.other.models import NotificationType
 
 # 按间距中的绿色按钮以运行脚本。
 if __name__ == "__main__":
@@ -19,22 +19,25 @@ if __name__ == "__main__":
     write_testcase()
 
     #执行用例
-    args = [
-        "-s",
-        "-v",
-        #"-n=2",  # 收集用例结果会出现重复执行的问题
-        "--reruns=2",
-        "--reruns-delay=3",
-        #"./test_case/xiaofa/案源收藏/test_caseCollectAdd.py",
-        "./test_case/xiaofa/小法法/",
-        "--alluredir=./report/allure_results",
-        "--clean-alluredir"
-    ]
-    pytest.main(args)
+    try:
+        args = [
+            "-s",
+            "-v",
+            #"-n=2",  # 收集用例结果会出现重复执行的问题
+            #"--reruns=2",
+            #"--reruns-delay=3",
+            #"./test_case/xiaofa/案源收藏/test_caseCollectAdd.py",
+            "./test_case/xiaofa/小法法工服务评价/",
+            "--alluredir=./report/allure_results",
+            "--clean-alluredir"
+        ]
+        pytest.main(args)
 
-    # 生成allure报告
-    cmd = "allure generate ./report/allure_results -o ./report/allure_report -c ./report/allure_report"
-    os.system(cmd)
+        # 生成allure报告
+        cmd = "allure generate ./report/allure_results -o ./report/allure_report -c ./report/allure_report"
+        os.system(cmd)
+    except BaseException as e:
+        raise e
 
     # 通知
     allure_data = AllureFileClean().get_case_count()

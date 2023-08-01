@@ -12,10 +12,10 @@ import pytest
 import requests
 
 from common.config import TOKEN_FILE, PRE_DATA_DIR
-from common.log.log_control import LogHandler
-from common.utils.cache_control import CacheHandler
-from common.utils.json_control import JsonHandler
-from common.utils.yaml_control import GetYamlCaseData
+from utils.log.log_control import LogHandler
+from utils.cache.cache_control import CacheHandler
+from utils.other.json_control import JsonHandler
+from utils.other.yaml_control import GetYamlCaseData
 
 
 # 每天自动获取token更新到token.json中,并加到缓存

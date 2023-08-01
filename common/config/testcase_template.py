@@ -5,9 +5,9 @@ import ast
 import allure
 import pytest
 
-from common.file_tools.get_yaml_data_analysis import GetTestCase
-from common.unit.RequestSend import RequestSend
-from common.utils.regular_control import config_regular
+from utils.file_tools.get_yaml_data_analysis import GetTestCase
+from utils.requests.RequestSend import RequestSend
+from utils.other.regular_control import config_regular
 
 case_id = case_list
 TestData = GetTestCase.get_case_data(case_id)
