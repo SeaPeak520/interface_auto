@@ -51,7 +51,7 @@ class FromExcelWriteYaml:
             if not is_null and data or is_null:
                 return data
         except ValueNullError as e:
-            raise f"{message}数据不能为空： {e}"
+            raise f"{message}数据不能为空： {e}" from e
 
     @staticmethod
     def request_type_handler(headers=None):

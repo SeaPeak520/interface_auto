@@ -1,12 +1,6 @@
-import os
-import sys
-
 from common.config.setting import root_path,ensure_path_sep
 
-sys.path.append(os.path.dirname(sys.path[0]))
-
 # 主目录
-# ROOT_DIR = str(os.path.realpath(__file__)).split('common\config')[0].replace('\\', '/')
 ROOT_DIR = root_path()
 
 # 测试用例目录
@@ -45,4 +39,7 @@ ALLURE_DIR = ensure_path_sep(f'{ROOT_DIR}/report/allure_report/')
 ALLURE_TESTCASES = ensure_path_sep(f'{ALLURE_DIR}data/test-cases/')
 
 ALLURE_SUMMARY = ensure_path_sep(f'{ALLURE_DIR}widgets/summary.json')
+
+#jenkins容器的项目目录
+JENKIN_ALLURE = ensure_path_sep('/var/jenkins_home/workspace/auto/allure-results')
 

@@ -5,8 +5,8 @@ import time
 
 from common.config import ROOT_DIR
 from utils.other.file_control import create_file
+from common.config.setting import ensure_path_sep
 
-sys.path.append(os.path.dirname(sys.path[0]))
 
 
 # 格式化日志内容（新增变量file_name）
@@ -37,6 +37,7 @@ class LogHandler:
         :param file: log_control.py （文件名称） 在哪个文件执行输出的日志
         """
         self.file = file
+
         # 创建日志记录器
         self.logger = logging.getLogger()
         # 设置日志记录器的默认等级
@@ -58,7 +59,7 @@ class LogHandler:
         # 把文件变量添加到过滤器里，否则格式化日志时，file_name变量会报错
         self.logger.addFilter(AppFilter(self.file))
         if levels == 'error':
-            self.err_file = f'{self.path}Log/err_{self.date}.log'
+            self.err_file = ensure_path_sep(f'{self.path}/Log/err_{self.date}.log')
             # 不存在则创建日志文件
             create_file(self.err_file)
             # 创建文件处理器
@@ -68,13 +69,13 @@ class LogHandler:
             # 添加文件处理器
             self.logger.addHandler(self.err_handler)
         elif levels == 'warning':
-            self.warning_file = f'{self.path}Log/warning_{self.date}.log'
+            self.warning_file = ensure_path_sep(f'{self.path}/Log/warning_{self.date}.log')
             create_file(self.warning_file)
             self.warning_handler = logging.FileHandler(self.warning_file, encoding='utf-8')
             self.warning_handler.setFormatter(logging.Formatter(self.__format, datefmt=self.__date))
             self.logger.addHandler(self.warning_handler)
         else:
-            self.info_file = f'{self.path}Log/info_{self.date}.log'
+            self.info_file = ensure_path_sep(f'{self.path}/Log/info_{self.date}.log')
             create_file(self.info_file)
             self.handler = logging.FileHandler(self.info_file, encoding='utf-8')
             self.handler.setFormatter(logging.Formatter(self.__format, datefmt=self.__date))
