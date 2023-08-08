@@ -11,7 +11,7 @@ from utils.notification.email_control import SendReport
 from utils.notification.wechat_send import WeChatSend
 from utils import config
 from utils.other.models import NotificationType
-from common.config import ROOT_DIR,JENKIN_ALLURE
+from common.config import ROOT_DIR,JENKINS_ALLURE
 
 
 
@@ -28,20 +28,20 @@ if __name__ == "__main__":
         args = [
             "-s",
             "-v",
-            #"-n=2",  # 收集用例结果会出现重复执行的问题
-            #"--reruns=2",
-            #"--reruns-delay=3",
+            "-n=2",  # 收集用例结果会出现重复执行的问题
+            "--reruns=1",
+            "--reruns-delay=2",
             #f"{ROOT_DIR}/test_case/xiaofa/案源收藏/test_caseCollectAdd.py",
             f"{ROOT_DIR}/test_case/xiaofa/小法法工服务评价/",
-            #f"--alluredir={ROOT_DIR}/report/allure_results",
-            f"--alluredir={JENKIN_ALLURE}",
+            f"--alluredir={ROOT_DIR}/report/allure_results",
+            #f"--alluredir={JENKINS_ALLURE}",
             "--clean-alluredir"
         ]
         pytest.main(args)
 
         # 生成allure报告 ，当jenkins集成由allure插件进行生成报告（所以这里要注释）
-        #cmd = f"allure generate {ROOT_DIR}/report/allure_results -o {ROOT_DIR}/report/allure_report -c {ROOT_DIR}/report/allure_report"
-        #sp.run(cmd, shell=True,capture_output=True,encoding='utf-8')
+        cmd = f"allure generate {ROOT_DIR}/report/allure_results -o {ROOT_DIR}/report/allure_report -c {ROOT_DIR}/report/allure_report"
+        sp.run(cmd, shell=True,capture_output=True,encoding='utf-8')
     except BaseException as e:
         raise e
 

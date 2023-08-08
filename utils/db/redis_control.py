@@ -1,25 +1,24 @@
 import os
-import sys
-
 import allure
 import redis
 
 from utils.log.log_control import LogHandler
 from utils import config
 
-sys.path.append(os.path.dirname(sys.path[0]))
-
 
 class RedisHelper:
     def __init__(self, host: str = config.redis.host, port: int = config.redis.port,
                  pwd: str = config.redis.pwd, db: str = config.redis.db):
-        self.__redis_pool = redis.ConnectionPool(host=host,
-                                                 port=port,
-                                                 password=pwd,
-                                                 db=db,
-                                                 decode_responses=True)
-        self.__redis_conn = redis.Redis(connection_pool=self.__redis_pool)
-        self.pipe = self.__redis_conn.pipeline(transaction=True)
+        try:
+            self.__redis_pool = redis.ConnectionPool(host=host,
+                                                     port=port,
+                                                     password=pwd,
+                                                     db=db,
+                                                     decode_responses=True)
+            self.__redis_conn = redis.Redis(connection_pool=self.__redis_pool)
+            self.pipe = self.__redis_conn.pipeline(transaction=True)
+        except BaseException as e:
+            raise BaseException(f"数据库连接失败:{e}")
         self.log = LogHandler(os.path.basename(__file__))
 
     # 获取多个key的值，传键：r.mget('manager:service:num','oms:orderId20220711')

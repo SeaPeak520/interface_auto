@@ -1,5 +1,4 @@
 import os
-import sys
 from typing import List, Text, Union
 
 import allure
@@ -11,19 +10,20 @@ from utils.log.log_control import LogHandler
 from utils import config
 from utils.other.models import load_module_functions
 
-sys.path.append(os.path.dirname(sys.path[0]))
-
 
 class MysqlDB:
     # 初始化
     def __init__(self):
         self.log = LogHandler(os.path.basename(__file__))
-        self.conn = self.get_mysql_conn(config.mysql.host,
-                                        config.mysql.port,
-                                        config.mysql.user,
-                                        config.mysql.pwd,
-                                        config.mysql.db)
-        self.cur = self.conn.cursor()
+        try:
+            self.conn = self.get_mysql_conn(config.mysql.host,
+                                            config.mysql.port,
+                                            config.mysql.user,
+                                            config.mysql.pwd,
+                                            config.mysql.db)
+            self.cur = self.conn.cursor()
+        except BaseException as e:
+            raise BaseException(f"数据库连接失败:{e}")
 
     # 释放资源
     def __del__(self):

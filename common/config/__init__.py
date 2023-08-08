@@ -41,5 +41,5 @@ ALLURE_TESTCASES = ensure_path_sep(f'{ALLURE_DIR}data/test-cases/')
 ALLURE_SUMMARY = ensure_path_sep(f'{ALLURE_DIR}widgets/summary.json')
 
 #jenkins容器的项目目录
-JENKIN_ALLURE = ensure_path_sep('/var/jenkins/workspace/auto/allure-results')
+JENKINS_ALLURE = ensure_path_sep('/var/jenkins_home/workspace/auto/allure-results')
 
