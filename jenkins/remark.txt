@@ -1,0 +1,11 @@
+1、下载jdk 和 allure
+jdk链接：https://www.oracle.com/java/technologies/downloads/#java11  个人下载的是jdk-11.0.18_linux-x64_bin.tar.gz
+allure链接：https://github.com/allure-framework/allure2/releases  个人下载的是allure-2.21.0.tgz
+
+2、把jenkins目录放在linux系统里，root用户
+包含jdk 和 allure的压缩文件、build.sh、create_user.sh、Dockerfile、env_path、run.sh、start.sh
+
+3、检查是否有jenkins用户
+没有则执行create_user.sh脚本
+
+4、执行start.sh创建镜像和容器（确保没有镜像：jenkins:2.375.3 ，容器：jenkins ，否则会清除之前的镜像和容器）
