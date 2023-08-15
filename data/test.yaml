@@ -12,14 +12,12 @@ caseCollectConcel:
   method: post
   remark: 取消收藏案源信息接口
   # 是否执行，空或者 true 都会执行
-  is_run:
+  is_run: true
   #请求头
   headers:
     Content-Type: application/form-data
     #请求带上token，从token.json获取
-    authorization: true
-    # 这里cookie的值，写的是存入缓存的名称
-    #cookie: $cache{login_cookie}
+    authorization: $cache{token}
   # 请求的数据，是 params 还是 json、或者file、data
   requestType: params
   #请求参数
@@ -63,15 +61,23 @@ caseCollectConcel:
       value: 操作成功
       AssertType:
       message: message不一致
-  #前置
+  #前置-sql
   setup_sql:
     - delete from table where member_id=1 and standard_id=1;
-  #后置
+  #请求参数或响应结果存入缓存
+  current_request_set_cache:
+    - type: response  #request
+      jsonpath:
+        - $.data
+      set_cache:
+        - test_order_expansionGoldOrder_td_data
+  #后置-sql
+  teardown_sql:
+    - delete from oms_order where id=$td{test_order_expansionGoldOrder_td_data}
+  #后置-接口
   teardown:
-    #后置直接执行的sql
-    sql:
-      - delete from table where order_id=1;
-    #从请求结果中获取参数拼接到sql执行
-    is_params:
-      $.data: delete from table where order_id=
+    - case_id: caseCollectAdd #依赖用例名称
+      replace_key: #把值替换到用例的请求参数（注意不是当前执行用例）
+        caseId: 18996
+        name: "测试"
 
